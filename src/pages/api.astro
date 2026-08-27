@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="Explore the Attune HTTP API from its OpenAPI contract." />
+    <link rel="icon" type="image/svg+xml" href="/attune-favicon.svg" />
+    <title>Attune API explorer</title>
+    <style>
+      body { margin: 0; }
+      .api-bar { min-height: 56px; display: flex; align-items: center; gap: 1.2rem; padding: 0 1.2rem; color: #dce5f0; border-bottom: 1px solid #2e3b50; background: #101827; font: 600 14px system-ui, sans-serif; }
+      .api-bar img { width: 118px; height: 36px; object-fit: contain; }
+      .api-bar a { color: inherit; text-decoration: none; }
+      .api-bar a:hover { color: #75dfd4; }
+      .api-bar .back { margin-left: auto; }
+      .api-bar span { color: #7f8da3; font-family: ui-monospace, monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+    </style>
+  </head>
+  <body>
+    <nav class="api-bar" aria-label="API explorer navigation">
+      <a href="/" aria-label="Attune documentation home"><img src="/attune-logo-navbar.svg" alt="Attune" /></a>
+      <span>API explorer</span>
+      <a class="back" href="/">← Documentation</a>
+      <a href="/openapi.json">OpenAPI JSON</a>
+    </nav>
+    <div id="scalar-api"></div>
+    <script is:inline src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.66.1"></script>
+    <script is:inline>
+      Scalar.createApiReference("#scalar-api", {
+        url: "/openapi.json",
+        pageTitle: "Attune API explorer",
+        theme: "purple",
+        layout: "modern",
+        hideClientButton: true,
+        persistAuth: false,
+        telemetry: false,
+        showSidebar: true,
+        darkMode: false,
+        withDefaultFonts: false,
+        hideTestRequestButton: true,
+        showDeveloperTools: "never",
+        agent: { disabled: true },
+        mcp: { name: "Attune API", url: "", disabled: true },
+      });
+    </script>
+  </body>
+</html>

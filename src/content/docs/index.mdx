@@ -1,0 +1,60 @@
+---
+title: Attune documentation
+description: Build, deploy, and operate event-driven automation with Attune.
+template: splash
+hero:
+  title: If this happens, run that.
+  tagline: Attune is an if-this-then-that system for operational work. It records what happened, checks the rules you configure, and runs the selected action or workflow only when the conditions match.
+  image:
+    file: ../../assets/docs-mark.svg
+    alt: Configured triggers and rules govern runtime events. A matching event creates an enforcement and an execution of the selected action. An unmatched event creates no enforcement. A durable queue can lease one item or a batch into the same action execution path.
+  actions:
+    - text: Start a local system
+      link: /administration/quick-start/
+      icon: right-arrow
+      variant: primary
+    - text: Understand the model
+      link: /introduction/what-is-attune/
+      icon: open-book
+banner:
+  content: Attune is pre-production. Interfaces may change before the first stable release.
+---
+
+import { CardGrid, Icon, LinkCard } from '@astrojs/starlight/components';
+
+## How Attune starts work
+
+Attune keeps configured metadata separate from the records created while work runs. Sensors, triggers, rules, actions, and queue definitions are configuration. Events, enforcements, queue items, and executions record runtime activity.
+
+On the event path, a sensor emits an event for a trigger. Attune checks the event against rules for that trigger. Only matching rule conditions create an enforcement. The rule selects the action, and the enforcement creates an execution of that action. If nothing matches, the event remains recorded and no enforcement is created.
+
+An enforcement records that a rule fired. It does not mean the action succeeded. The execution status and result record the outcome.
+
+For work that must wait for dispatch capacity, producers can submit durable queue items. The queue definition names the dispatch action and controls batching and concurrency. The dispatcher leases one item or a batch, then creates a normal execution of that action. Several items can therefore share one execution, and a retried item can produce another execution.
+
+## Choose a path
+
+<CardGrid>
+  <div class="audience-link">
+    <Icon name="setting" size="1.5rem" class="audience-link__icon" />
+    <LinkCard title="Admin" description="Start the service set, configure identity and permissions, install packs, and manage queues and policies." href="/administration/quick-start/" />
+  </div>
+  <div class="audience-link">
+    <Icon name="puzzle" size="1.5rem" class="audience-link__icon" />
+    <LinkCard title="Pack developer" description="Write actions, sensors, rules, workflows, dashboards, runtimes, and tests as versioned pack content." href="/pack-development/overview/" />
+  </div>
+  <div class="audience-link">
+    <Icon name="server" size="1.5rem" class="audience-link__icon" />
+    <LinkCard title="Operator" description="Deploy with Docker, Kubernetes, or Linux packages, then monitor, back up, secure, and scale the system." href="/operations/deployment/" />
+  </div>
+  <div class="audience-link">
+    <Icon name="code-branch" size="1.5rem" class="audience-link__icon" />
+    <LinkCard title="API client" description="Use the CLI, MCP server, generated SDKs, or the OpenAPI contract to integrate with Attune." href="/reference/api/" />
+  </div>
+</CardGrid>
+
+## Learn the internal model
+
+<LinkCard title="What is Attune?" description="Learn the core event flow and the people who use the platform." href="/introduction/what-is-attune/" />
+<LinkCard title="Core concepts" description="Understand packs, actions, workflows, workers, inquiries, keys, artifacts, and queues." href="/introduction/core-concepts/" />
+<LinkCard title="Architecture" description="See how the API, executor, workers, sensors, notifier, and supervisor fit together." href="/introduction/architecture/" />

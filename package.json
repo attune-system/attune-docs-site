@@ -1,0 +1,23 @@
+{
+  "name": "attune-docs-site",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "check": "astro check",
+    "build": "astro build",
+    "preview": "astro preview",
+    "import:openapi": "node scripts/import-openapi.mjs",
+    "verify": "npm run check && npm run build && node scripts/check-built-links.mjs"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.6",
+    "@astrojs/starlight": "^0.41.9",
+    "astro": "^7.2.7",
+    "astro-mermaid": "^2.1.0",
+    "mermaid": "^11.17.2",
+    "sharp": "^0.35.4",
+    "typescript": "^5.9.3"
+  }
+}
