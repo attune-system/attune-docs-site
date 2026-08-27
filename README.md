@@ -45,7 +45,7 @@ Datastar. Do not add React or another SPA framework.
 ## Deploy to k3s
 
 The deployment pulls the public
-`ghcr.io/attune-system/attune-docs-site:0.1.0` image:
+`ghcr.io/attune-system/attune-docs-site:0.1.1` image:
 
 ```bash
 kubectl apply -f deploy/k3s.yaml

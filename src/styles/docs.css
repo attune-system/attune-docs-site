@@ -33,7 +33,6 @@
 .hero h1 { letter-spacing: -.055em; }
 .hero > img { order: 2; }
 .hero .tagline { max-width: 720px; }
-.hero a { color: #ffffff; }
 .sl-markdown-content h2 { letter-spacing: -.025em; }
 .sl-markdown-content img { border: 1px solid var(--sl-color-gray-5); box-shadow: 8px 10px 0 color-mix(in srgb, var(--sl-color-accent) 12%, transparent); }
 .sl-markdown-content table { font-size: .9rem; }
