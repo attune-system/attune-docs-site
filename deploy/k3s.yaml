@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: site
-          image: attune-docs-site:local
+          image: ghcr.io/attune-system/attune-docs-site:0.1.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

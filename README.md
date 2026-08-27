@@ -44,14 +44,12 @@ Datastar. Do not add React or another SPA framework.
 
 ## Deploy to k3s
 
-Build the image and import it into a single-node local k3s cluster:
+The deployment pulls the public
+`ghcr.io/attune-system/attune-docs-site:0.1.0` image:
 
 ```bash
-docker build -t attune-docs-site:local .
-docker save attune-docs-site:local | sudo k3s ctr images import -
 kubectl apply -f deploy/k3s.yaml
 ```
 
-For a multi-node cluster, push the image to a registry that every node can read.
 The manifest creates an Ingress for `docs.attunedev.org` through Traefik. Point
 the domain at the cluster ingress address before you open the site.
