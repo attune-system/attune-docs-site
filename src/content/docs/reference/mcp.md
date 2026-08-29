@@ -11,32 +11,13 @@ For most local tools, run `attune-mcp` over stdio. Use HTTP only when the client
 
 ## Prerequisites
 
-Start a local Attune environment:
+Start a local Attune environment with the [`attune-docker` distribution](/administration/quick-start/), then verify the API:
 
 ```bash
-docker compose up -d
 curl http://localhost:8080/health
 ```
 
-Install the `attune` CLI package, which includes the `attune-mcp` server.
-
-### Windows (Chocolatey)
-
-`attune-cli` is currently unlisted in the Chocolatey community feed. Run this from an elevated PowerShell session to install the available release explicitly:
-
-```powershell
-choco install attune-cli --version=0.1.3 -y
-attune --help
-attune-mcp --help
-```
-
-### macOS (Homebrew)
-
-```bash
-brew install --cask attune-system/attune-client-tap/attune
-attune --help
-attune-mcp --help
-```
+Install the released CLI package with [Homebrew or Chocolatey](/reference/cli/#install-a-released-binary). Both packages install `attune` and `attune-mcp`. Verify the MCP binary with `attune-mcp --help`.
 
 For source builds or development, build or install the CLI binaries instead:
 
@@ -449,46 +430,6 @@ attune-mcp --transport http --listen-addr 0.0.0.0:8090 \
 ```
 
 Do not publish that listener directly. Use protected ingress with authentication and network controls. Treat public `/health` exposure as a separate proxy/network policy decision.
-
-## Docker Compose MCP Service
-
-Docker Compose includes an optional MCP HTTP service profile:
-
-```bash
-ATTUNE_MCP_HTTP_BEARER_TOKEN="$MCP_CLIENT_TOKEN" \
-  docker compose --profile mcp up -d mcp
-curl http://localhost:8090/health
-```
-
-The service uses:
-
-```text
-ATTUNE_API_URL=http://api:8080
-ATTUNE_MCP_TRANSPORT=http
-ATTUNE_MCP_LISTEN_ADDR=0.0.0.0:8090
-ATTUNE_MCP_PUBLIC_LISTEN=true
-ATTUNE_MCP_HTTP_BEARER_TOKEN=<separate-inbound-token>
-```
-
-Set `ATTUNE_MCP_HTTP_BEARER_TOKEN` before starting the Compose profile. The container listener uses the required public-listen opt-in and is published only on host loopback by the provided configuration. Any deployment that publishes it beyond loopback still requires protected ingress and network controls.
-
-Default credentials come from:
-
-```text
-ATTUNE_MCP_LOGIN=test@attune.local
-ATTUNE_MCP_PASSWORD=TestPass123!
-```
-
-Override them in your shell or `.env` before starting the profile:
-
-```bash
-ATTUNE_MCP_LOGIN=operator@example.com \
-ATTUNE_MCP_PASSWORD='replace-me' \
-ATTUNE_MCP_HTTP_BEARER_TOKEN="$MCP_CLIENT_TOKEN" \
-docker compose --profile mcp up -d mcp
-```
-
-Use the Compose service for HTTP-capable clients. For editor stdio integrations, point the editor at the local `attune-mcp` binary instead.
 
 ## Inside Attune Executions
 

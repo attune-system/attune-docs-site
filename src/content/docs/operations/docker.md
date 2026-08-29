@@ -5,7 +5,23 @@ sidebar:
   label: "Docker Operations"
   order: 3
 ---
-Docker Compose is the standard way to run Attune locally and is useful for single-host testing.
+The [`attune-docker` repository](https://github.com/attune-system/attune-docker) runs published Attune images with Docker Compose. Use it for local and single-host deployments without cloning the application source.
+
+## Install the distribution
+
+Install Git, OpenSSL, Docker Engine, and Docker Compose v2. Then run:
+
+```bash
+git clone https://github.com/attune-system/attune-docker.git attune-docker
+cd attune-docker
+./scripts/create-env.sh
+docker compose pull
+docker compose up -d
+```
+
+The setup script creates `.env` with random JWT, encryption, and agent-bootstrap secrets. Change `ATTUNE_TEST_PASSWORD` in that file before the first startup if you do not want the default development password.
+
+The Compose file pulls images from `ghcr.io/attune-system`. Set `ATTUNE_IMAGE_TAG` in `.env` to use another published image set, and keep every Attune image on the same tag.
 
 ## Start and stop
 
@@ -22,28 +38,21 @@ docker compose logs -f api
 docker compose logs -f executor worker-shell sensor notifier
 ```
 
-## Optional MCP service
+To update the distribution and its images:
 
 ```bash
-ATTUNE_MCP_HTTP_BEARER_TOKEN="$MCP_CLIENT_TOKEN" \
-  docker compose --profile mcp up -d mcp
+git pull --ff-only
+docker compose pull
+docker compose up -d
 ```
 
-The provided Compose service publishes port `8090` on host loopback. `/mcp` requires this separate inbound bearer token. Do not publish the service beyond loopback without protected ingress and restricted network reachability.
+## Connect an MCP client
+
+The public Compose distribution does not run an MCP service. Install `attune-mcp` with the released CLI package and run it next to your local client. See [MCP Server Local Setup](/reference/mcp/).
 
 ## Agent workers
 
-The default compose stack runs agent-based `worker-shell`, `worker-python`, `worker-node`, and `worker-full` services. Extra agent worker examples live in the compose override:
-
-```bash
-docker compose -f docker-compose.yaml -f docker-compose.agent.yaml up -d
-```
-
-Use the override when you want additional workers for arbitrary runtime images without building a dedicated worker image.
-
-## Pack binary initialization
-
-The `init-pack-binaries` service builds and copies static pack binaries into the `packs_data` volume before `init-packs` registers packs. It preserves generated ELF binaries when copying host pack files.
+The default stack runs `worker-shell`, `worker-python`, `worker-node`, and `worker-full`. The `init-agent` service copies the released agent binaries into the shared `agent_bin` volume before the workers start.
 
 ## Export logs to external systems
 
@@ -54,7 +63,7 @@ Attune’s forwarding contract is:
 
 Use external agents/listeners to collect container logs, not `/opt/attune/logs` volumes.
 
-Compose also publishes machine-readable forwarding-intent labels on services:
+Compose publishes machine-readable forwarding labels on Attune application services:
 
 - `com.attune.log.contract=container-stdout-stderr`
 - `com.attune.log.transport=docker`
@@ -80,7 +89,7 @@ services:
       - /opt/datadog-agent/run:/opt/datadog-agent/run:rw
 ```
 
-Attune Compose services already expose stable labels (`com.attune.service`, Datadog tags) that Datadog can use for service/env/version tagging.
+Attune application services expose stable labels such as `com.attune.service` that Datadog can use for service, environment, and version tags. PostgreSQL, RabbitMQ, migrations, and initialization jobs do not carry these labels.
 
 ### Example: Splunk Universal Forwarder (host listener)
 
@@ -128,9 +137,9 @@ Important: this basic `filelog` path collects log body/stream/time but not conta
 ### Quick validation
 
 ```bash
-docker inspect attune-api-1 --format '{{json .Config.Labels}}'
-docker inspect attune-api-1 --format '{{json .HostConfig.LogConfig}}'
-docker logs --tail=5 attune-api-1
+docker inspect attune-api --format '{{json .Config.Labels}}'
+docker inspect attune-api --format '{{json .HostConfig.LogConfig}}'
+docker logs --tail=5 attune-api
 ```
 
 Check for `com.attune.log.contract`, `com.attune.log.transport`, `com.attune.log.volume_hint`, and `com.attune.service` in labels. You should also see JSON service-log events in `docker logs`.
@@ -138,14 +147,15 @@ Check for `com.attune.log.contract`, `com.attune.log.transport`, `com.attune.log
 ## Common commands
 
 ```bash
-# Rebuild services
-docker compose build
+# Pull the configured Attune image set
+docker compose pull
 
 # Recreate a service after config/image changes
 docker compose up -d --force-recreate api
 
-# Inspect logs from a failed init job
+# Inspect logs from failed initialization jobs
 docker compose logs migrations
+docker compose logs init-user
 docker compose logs init-packs
 
 # Remove all containers but keep named volumes
@@ -166,13 +176,14 @@ docker compose down
 | --- | --- |
 | API cannot find packs | `packs_data` volume, `init-packs` logs, `packs_base_dir`. |
 | Worker cannot import dependency | `runtime_envs` volume and runtime setup logs. |
-| Pack binary missing | `init-pack-binaries` logs and target architecture env. |
+| Agent binary missing | `init-agent` logs and the `agent_bin` volume. |
 | Web UI cannot call API | CORS config, service URL, container port mapping. |
 | WebSocket fails | Notifier logs, JWT secret parity with API, browser subprotocol auth. |
 
 ## Related
 
 - [Admin Quick Start](/administration/quick-start/)
+- [`attune-docker` distribution](https://github.com/attune-system/attune-docker)
 - [Runtime Environments](/pack-development/runtime-environments/)
 - [Monitoring and Troubleshooting](/operations/monitoring/)
 - [Operational Visibility](/operations/visibility/)

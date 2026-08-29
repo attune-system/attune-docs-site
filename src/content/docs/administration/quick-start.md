@@ -5,70 +5,66 @@ sidebar:
   label: "Admin Quick Start"
   order: 1
 ---
-Use this page to bring up a local Attune environment and perform the first administrative checks.
+Use the public Docker distribution to start Attune locally and perform the first administrative checks.
 
 ![Attune dashboard showing first-check system status](/screenshots/Admin-Quick-Start.png)
 
-## Start Docker Compose
+## Install the Docker distribution
 
-From the repository root:
+Install Git, OpenSSL, Docker Engine, and Docker Compose v2. Then clone the [`attune-docker` repository](https://github.com/attune-system/attune-docker) and create its local environment file:
 
 ```bash
+git clone https://github.com/attune-system/attune-docker.git attune-docker
+cd attune-docker
+./scripts/create-env.sh
+docker compose pull
 docker compose up -d
 ```
 
-Core services include PostgreSQL/TimescaleDB, RabbitMQ, migrations, core-pack initialization, API, executor, workers, sensor, notifier, and web UI.
+The distribution pulls published images from `ghcr.io/attune-system`. It does not build Attune from source. The stack includes PostgreSQL, RabbitMQ, initialization jobs, the API, the executor, the supervisor, action workers, a sensor worker, the notifier, and the web UI.
 
-Open:
+Open one of these local endpoints:
 
-- Web UI: `http://localhost:3000`
-- API: `http://localhost:8080`
-- Notifier WebSocket: `ws://localhost:8081/ws` (`http://localhost:8081/health` for health)
+| Service | Address |
+| --- | --- |
+| Web UI | `http://localhost:3000` |
+| API | `http://localhost:8080` |
+| API documentation | `http://localhost:8080/api-spec/swagger-ui/` |
+| Notifier WebSocket | `ws://localhost:8081/ws` |
 
-Default local login:
+Sign in with the account stored in `.env`. The generated defaults are:
 
 ```text
 test@attune.local
 TestPass123!
 ```
 
+To use another initial password, change `ATTUNE_TEST_PASSWORD` before the first `docker compose up`.
+
 ## First checks
 
 ```bash
 docker compose ps
-docker compose logs --tail=100 api executor worker-shell sensor notifier
+docker compose logs --tail=100 migrations init-user init-packs api executor supervisor worker-full sensor notifier web
 ```
 
-Then confirm the core pack and actions are available:
+Install the released `attune` CLI by following the [CLI installation instructions](/reference/cli/#install-a-released-binary). Then confirm that you can authenticate and list the core actions:
 
 ```bash
-cargo run -p attune-cli -- auth login --username test@attune.local --password 'TestPass123!'
-cargo run -p attune-cli -- pack list
-cargo run -p attune-cli -- action list --pack core
+attune auth login --username test@attune.local --password 'TestPass123!'
+attune pack list
+attune action list --pack core
 ```
 
-## Optional MCP service
+## Connect an MCP client
 
-The MCP HTTP service is optional:
+The Docker distribution does not run an MCP endpoint. The Homebrew and Chocolatey CLI packages include `attune-mcp` for local IDEs, editors, and agent tools.
 
-```bash
-ATTUNE_MCP_HTTP_BEARER_TOKEN="$MCP_CLIENT_TOKEN" \
-  docker compose --profile mcp up -d mcp
-```
-
-It serves authenticated MCP over HTTP on host-loopback port `8090` and can also run over stdio through the `attune-mcp` binary. The inbound MCP token is separate from Attune API credentials; non-loopback deployment requires explicit public-listen opt-in plus protected ingress and network controls.
-
-For local IDE, editor, and AI agent setup, see [MCP Server Local Setup](/reference/mcp/).
+For client configuration and authentication, see [MCP Server Local Setup](/reference/mcp/).
 
 ## Agent workers
 
-To run agent-based workers using arbitrary runtime images:
-
-```bash
-docker compose -f docker-compose.yaml -f docker-compose.agent.yaml up -d
-```
-
-Agent workers download or mount the statically linked `attune-agent`, auto-detect interpreters, and register worker runtime capabilities.
+The default distribution starts shell, Python, Node.js, and combined Python/Node.js action workers. It also starts a sensor worker with shell, Python, Node.js, and native runtime support. The workers run the agent binaries initialized by the `init-agent` service.
 
 ## Common admin tasks
 

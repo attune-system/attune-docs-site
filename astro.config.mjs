@@ -1,6 +1,9 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import mermaid from "astro-mermaid";
+import { resolveSiteLinks } from "./src/config/siteLinks";
+
+const { slackInviteUrl, supportUrl } = resolveSiteLinks(process.env);
 
 export default defineConfig({
   site: "https://docs.attunedev.org",
@@ -16,6 +19,16 @@ export default defineConfig({
           icon: "github",
           label: "GitHub",
           href: "https://github.com/attune-system/attune",
+        },
+        {
+          icon: "slack",
+          label: "Join the Attune Slack workspace",
+          href: slackInviteUrl,
+        },
+        {
+          icon: "heart",
+          label: "Support Attune",
+          href: supportUrl,
         },
       ],
       customCss: ["./src/styles/docs.css"],

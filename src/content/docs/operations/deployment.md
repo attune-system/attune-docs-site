@@ -23,55 +23,38 @@ Think of startup as staged readiness groups. Services in the same group can star
    - PostgreSQL/TimescaleDB
    - RabbitMQ
 
-2. Schema and binary bootstrap
+2. Schema and agent bootstrap
    - migrations, after PostgreSQL is healthy
-   - init-pack-binaries, to populate native pack binaries in Docker Compose
    - init-agent, to populate agent/CLI/MCP binaries in Docker Compose
 
 3. Data bootstrap
    - init-user, after migrations
-   - init-packs, after migrations; Docker Compose also waits for init-pack-binaries, while Helm orders init-user before init-packs with hook weights
+   - init-packs, after migrations; Helm orders init-user before init-packs with hook weights
 
 4. Core application services
    - API; Compose waits for migrations, init-user, init-packs, init-agent, database, and RabbitMQ, while Helm waits for schema, packs, and RabbitMQ
    - executor; Compose waits for migrations, init-user, init-packs, database, and RabbitMQ, while Helm waits for schema and packs
-   - notifier; Compose waits for migrations, database, and RabbitMQ, while Helm waits for schema
+   - supervisor and notifier; Compose waits for migrations, database, and RabbitMQ, while Helm waits for schema
    - action workers / agent workers; Compose waits for migrations, init-user, init-packs, init-agent, database, and RabbitMQ, while Helm copies agent binaries with an init container and waits for schema, packs, and RabbitMQ
    - sensor workers / sensor-agent containers; Compose waits for migrations, init-user, init-packs, init-agent, database, and RabbitMQ, while Helm copies agent binaries with an init container and waits for schema, packs, and RabbitMQ
 
 5. User-facing and optional adapters
    - Web UI; Docker Compose waits for API and notifier health, while Helm configures the web container to proxy `/api`, `/auth`, and `/ws` to the API/notifier services
-   - optional MCP HTTP service, after API is healthy
+   - optional Helm MCP service, after API is healthy
 ```
 
 The executor, notifier, action workers, and sensor workers do not need to wait for the API process to become healthy. They need the database/message queue and relevant bootstrap jobs. Some worker and sensor actions use `ATTUNE_API_URL` at execution time, but that is not the same as a service startup dependency.
 
 Helm and Docker Compose express readiness differently: Compose uses `depends_on` health/completion conditions, while Helm uses hook weights plus init containers for selected waits. A service may still require a configured database or RabbitMQ URL even when the chart does not block startup on an explicit wait for that dependency.
 
-## Images and builds
+## Published images
 
-Published multi-architecture container packages use the `edge` tag for the latest build:
+Both public distributions pull multi-architecture images from `ghcr.io/attune-system`.
 
-| Package | Pull reference | Build source |
-| --- | --- | --- |
-| [API](https://git.rdrx.app/attune-system/-/packages/container/attune%2Fapi/edge) | `git.rdrx.app/attune-system/attune/api:edge` | `docker/Dockerfile.runtime` |
-| [Executor](https://git.rdrx.app/attune-system/-/packages/container/attune%2Fexecutor/edge) | `git.rdrx.app/attune-system/attune/executor:edge` | `docker/Dockerfile.runtime` |
-| [Notifier](https://git.rdrx.app/attune-system/-/packages/container/attune%2Fnotifier/edge) | `git.rdrx.app/attune-system/attune/notifier:edge` | `docker/Dockerfile.runtime` |
-| [Agent binary bundle image](https://git.rdrx.app/attune-system/-/packages/container/attune%2Fagent/edge) | `git.rdrx.app/attune-system/attune/agent:edge` | `docker/Dockerfile.agent-package` |
-| [Migrations](https://git.rdrx.app/attune-system/-/packages/container/attune%2Fmigrations/edge) | `git.rdrx.app/attune-system/attune/migrations:edge` | `docker/Dockerfile.migrations-package` |
-| [Init user](https://git.rdrx.app/attune-system/-/packages/container/attune%2Finit-user/edge) | `git.rdrx.app/attune-system/attune/init-user:edge` | `docker/Dockerfile.init-user-package` |
-| [Init packs](https://git.rdrx.app/attune-system/-/packages/container/attune%2Finit-packs/edge) | `git.rdrx.app/attune-system/attune/init-packs:edge` | `docker/Dockerfile.init-packs-package` |
-| [Web UI](https://git.rdrx.app/attune-system/-/packages/container/attune%2Fweb/edge) | `git.rdrx.app/attune-system/attune/web:edge` | `docker/Dockerfile.web` |
+- [`attune-docker`](https://github.com/attune-system/attune-docker) defaults to the `edge` image set. Change `ATTUNE_IMAGE_TAG` in `.env` to select another published set.
+- [`attune-charts`](https://github.com/attune-system/attune-charts) pins an approved image version in each chart release.
 
-Local and Compose builds also use:
-
-- `docker/Dockerfile.optimized` for the API, executor, and notifier Rust services.
-- `docker/Dockerfile.web` for the Web UI.
-- `docker/Dockerfile.mcp` for an optional local MCP image. The publish workflow does not currently publish a standalone MCP container package; the `attune-mcp` binary is included in the agent bundle image.
-- `docker/Dockerfile.agent` for statically linked agent, sensor-agent, CLI, and MCP binaries used by Docker Compose's `init-agent`.
-- `docker/Dockerfile.pack-binaries` for pack-native binaries.
-
-Rust Dockerfiles use BuildKit cache mounts and set a larger `RUST_MIN_STACK` during release compilation.
+Keep the API, executor, supervisor, notifier, web, agent, migration, and initialization images on one Attune version.
 
 ## Volumes
 
@@ -89,7 +72,7 @@ Rust Dockerfiles use BuildKit cache mounts and set a larger `RUST_MIN_STACK` dur
 
 | Environment | Typical deployment |
 | --- | --- |
-| Development | Docker Compose with local source and default user. |
+| Development | The public Docker Compose distribution with a local default user. |
 | Staging | Docker Compose or Kubernetes with production-like secrets. |
 | Production | Kubernetes/Helm or managed orchestration with external PostgreSQL/RabbitMQ. |
 

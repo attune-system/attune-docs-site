@@ -13,15 +13,15 @@ The Windows and macOS packages install both `attune` and `attune-mcp`.
 
 ### Windows (Chocolatey)
 
-`attune-cli` is currently unlisted in the Chocolatey community feed. In an elevated PowerShell session, install the available release by specifying its version:
+In an elevated PowerShell session, install the approved `attune-cli` package from the Chocolatey community feed:
 
 ```powershell
-choco install attune-cli --version=0.1.3 -y
+choco install attune-cli -y
 attune --help
 attune-mcp --help
 ```
 
-Open a new terminal if PowerShell cannot find either command immediately after installation.
+The package supports 64-bit Windows and installs both executables. Open a new terminal if PowerShell cannot find either command immediately after installation. To install a newer approved release later, run `choco upgrade attune-cli -y`.
 
 ### macOS (Homebrew)
 
@@ -34,6 +34,8 @@ attune-mcp --help
 ```
 
 Homebrew selects the appropriate released binary for Apple Silicon or Intel Macs.
+
+To install a newer release later, run `brew upgrade --cask attune`.
 
 For GUI-launched MCP clients, use the installed binary's absolute path:
 

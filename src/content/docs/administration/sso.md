@@ -233,19 +233,36 @@ There are two patterns:
 
 When using `security.existingSecret`, the secret must include the normal required Attune keys as well as SSO overrides, because the chart will not create its default secret.
 
-Example:
+Create `attune-secrets.yaml` with every key from the chart-generated secret plus the SSO overrides. The connection URLs below require percent-encoded credentials. Either generate URI-safe database and RabbitMQ passwords, or percent-encode those two password values in the URLs while keeping `DB_PASSWORD` and the Helm values unencoded.
 
 ```yaml
 apiVersion: v1
 kind: Secret
 metadata:
   name: attune-secrets
+  namespace: attune
 type: Opaque
 stringData:
   ATTUNE__SECURITY__JWT_SECRET: "replace-with-strong-random-secret"
   ATTUNE__SECURITY__ENCRYPTION_KEY: "replace-with-32-plus-byte-secret"
-  ATTUNE__DATABASE__URL: "postgresql://attune:attune@attune-postgresql:5432/attune"
-  ATTUNE__MESSAGE_QUEUE__URL: "amqp://attune:attune@attune-rabbitmq:5672"
+  ATTUNE__DATABASE__URL: "postgresql://attune:replace-with-uri-safe-database-password@attune-attune-postgresql:5432/attune"
+  ATTUNE__MESSAGE_QUEUE__URL: "amqp://attune:replace-with-uri-safe-rabbitmq-password@attune-attune-rabbitmq:5672"
+  DB_HOST: "attune-attune-postgresql"
+  DB_PORT: "5432"
+  DB_USER: "attune"
+  DB_PASSWORD: "replace-with-uri-safe-database-password"
+  DB_NAME: "attune"
+  DB_SCHEMA: "attune"
+  TEST_LOGIN: "admin@example.com"
+  TEST_DISPLAY_NAME: "Attune Administrator"
+  TEST_PASSWORD: "TestPass123!"
+  DEFAULT_ADMIN_LOGIN: "admin@example.com"
+  DEFAULT_ADMIN_PERMISSION_SET_REF: "core.admin"
+  SOURCE_PACKS_DIR: "/source/packs"
+  TARGET_PACKS_DIR: "/opt/attune/packs"
+  RUNTIME_ENVS_DIR: "/opt/attune/runtime_envs"
+  ARTIFACTS_DIR: "/opt/attune/artifacts"
+  LOADER_SCRIPT: "/scripts/load_core_pack.py"
 
   ATTUNE__SECURITY__LOGIN_PAGE__SHOW_LOCAL_LOGIN: "true"
   ATTUNE__SECURITY__LOGIN_PAGE__SHOW_OIDC_LOGIN: "true"
@@ -274,13 +291,38 @@ stringData:
   ATTUNE__SECURITY__LDAP__PROVIDER_LABEL: "Company LDAP"
 ```
 
-Then install or upgrade with:
+Keep the database, RabbitMQ, and bootstrap identity values in `values-sso.yaml` synchronized with that Secret:
+
+```yaml
+security:
+  existingSecret: attune-secrets
+
+database:
+  password: replace-with-uri-safe-database-password
+
+rabbitmq:
+  password: replace-with-uri-safe-rabbitmq-password
+
+bootstrap:
+  testUser:
+    login: admin@example.com
+    displayName: Attune Administrator
+```
+
+Then install or upgrade from the public chart repository:
 
 ```bash
+helm repo add attune https://raw.githubusercontent.com/attune-system/attune-charts/main
+helm repo update attune
+
+kubectl create namespace attune --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -f attune-secrets.yaml
 
-helm upgrade --install attune ./charts/attune \
-  --set security.existingSecret=attune-secrets
+helm upgrade --install attune attune/attune \
+  --namespace attune \
+  --values values-sso.yaml \
+  --wait \
+  --wait-for-jobs
 ```
 
 If your cluster uses External Secrets, Sealed Secrets, Vault, or another secret operator, create the same key names in the resulting Kubernetes Secret.

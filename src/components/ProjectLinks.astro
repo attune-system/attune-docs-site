@@ -1,0 +1,28 @@
+---
+import { CardGrid, Icon, LinkCard } from "@astrojs/starlight/components";
+import { resolveSiteLinks } from "../config/siteLinks";
+
+const { slackInviteUrl, supportUrl } = resolveSiteLinks({
+  PUBLIC_SLACK_INVITE_URL: import.meta.env.PUBLIC_SLACK_INVITE_URL,
+  PUBLIC_SUPPORT_URL: import.meta.env.PUBLIC_SUPPORT_URL,
+});
+---
+
+<CardGrid>
+  <div class="audience-link">
+    <Icon name="slack" size="1.5rem" class="audience-link__icon" />
+    <LinkCard
+      title="Join us on Slack"
+      description="Ask questions, meet contributors, and follow Attune development in the community workspace."
+      href={slackInviteUrl}
+    />
+  </div>
+  <div class="audience-link">
+    <Icon name="heart" size="1.5rem" class="audience-link__icon" />
+    <LinkCard
+      title="Support Attune"
+      description="Fund the time and infrastructure that keep the open-source project moving."
+      href={supportUrl}
+    />
+  </div>
+</CardGrid>
