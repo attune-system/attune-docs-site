@@ -7935,9 +7935,6 @@
           "401": {
             "description": "Unauthorized"
           },
-          "403": {
-            "description": "Token is not authorized to create this event"
-          },
           "404": {
             "description": "Trigger not found"
           },
@@ -20575,12 +20572,6 @@
                           "items": {
                             "type": "string"
                           }
-                        },
-                        "workload_fence": {
-                          "type": [
-                            "object",
-                            "null"
-                          ]
                         }
                       }
                     },
@@ -21293,6 +21284,110 @@
             "description": "User already exists"
           }
         }
+      }
+    },
+    "/auth/sensor-token": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Create sensor token endpoint (internal use by sensor service)",
+        "description": "POST /auth/sensor-token",
+        "operationId": "create_sensor_token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSensorTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Sensor token created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Standard API response wrapper",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Response for sensor token creation",
+                      "required": [
+                        "identity_id",
+                        "sensor_ref",
+                        "token",
+                        "expires_at",
+                        "trigger_types",
+                        "permission_set_refs"
+                      ],
+                      "properties": {
+                        "expires_at": {
+                          "type": "string"
+                        },
+                        "identity_id": {
+                          "type": "integer",
+                          "format": "int64"
+                        },
+                        "pack_ref": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "permission_set_refs": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "sensor_ref": {
+                          "type": "string"
+                        },
+                        "token": {
+                          "type": "string"
+                        },
+                        "trigger_types": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Optional message"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
       }
     },
     "/auth/settings": {
@@ -24830,9 +24925,6 @@
               "conditions",
               "action_params",
               "trigger_params",
-              "sensor_worker_selector",
-              "sensor_worker_tolerations",
-              "sensor_worker_affinity",
               "enabled",
               "is_adhoc",
               "created",
@@ -24933,18 +25025,6 @@
                 "type": "string",
                 "description": "Unique reference identifier",
                 "example": "slack.notify_on_error"
-              },
-              "sensor_worker_affinity": {
-                "type": "object"
-              },
-              "sensor_worker_selector": {
-                "type": "object"
-              },
-              "sensor_worker_tolerations": {
-                "type": "array",
-                "items": {
-                  "type": "object"
-                }
               },
               "trace_tag_template": {
                 "type": [
@@ -29592,21 +29672,6 @@
             "description": "Unique reference identifier (e.g., \"mypack.notify_on_error\")",
             "example": "slack.notify_on_error"
           },
-          "sensor_worker_affinity": {
-            "type": "object",
-            "description": "Required and preferred sensor-worker affinity for this rule."
-          },
-          "sensor_worker_selector": {
-            "type": "object",
-            "description": "Required labels for the sensor worker that runs this rule's managed sensor."
-          },
-          "sensor_worker_tolerations": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            },
-            "description": "Taints tolerated by the sensor worker for this rule."
-          },
           "trace_tag_template": {
             "type": [
               "string",
@@ -29801,6 +29866,49 @@
             },
             "description": "Worker taints tolerated by this sensor process.",
             "default": []
+          }
+        }
+      },
+      "CreateSensorTokenRequest": {
+        "type": "object",
+        "description": "Request body for creating sensor tokens",
+        "required": [
+          "sensor_ref",
+          "trigger_types"
+        ],
+        "properties": {
+          "pack_ref": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Registered pack reference. Internal worker callers must provide it;\npublic callers may omit it and let the API resolve it."
+          },
+          "permission_set_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Explicit sensor cache permission-set refs. `standard` grants read-only\naccess to the registered sensor and pack cache scopes."
+          },
+          "sensor_ref": {
+            "type": "string",
+            "description": "Sensor reference (e.g., \"core.timer\")"
+          },
+          "trigger_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of trigger types this sensor can create events for"
+          },
+          "ttl_seconds": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Optional TTL in seconds (default: 86400 = 24 hours, max: 259200 = 72 hours)"
           }
         }
       },
@@ -32539,14 +32647,6 @@
         "type": "object",
         "description": "Request body for internal sensor token creation/reissue.\n\nWorker/service tokens must provide `sensor_ref` and `trigger_types`.\nSensor-token refresh calls may omit those fields; the server will derive them\nfrom authenticated identity state.",
         "properties": {
-          "assignment_generation": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64",
-            "description": "Current sensor workload assignment generation (required for worker/service callers)."
-          },
           "pack_ref": {
             "type": [
               "string",
@@ -32588,22 +32688,6 @@
             ],
             "format": "int64",
             "description": "Optional TTL in seconds (default: 86400 = 24 hours, max: 259200 = 72 hours)"
-          },
-          "worker_instance": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uuid",
-            "description": "Worker process instance that owns the assignment (required for worker/service callers)."
-          },
-          "workload_id": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64",
-            "description": "Assigned sensor workload ID (required for worker/service callers)."
           }
         }
       },
@@ -35529,9 +35613,6 @@
                 "trigger_ref",
                 "action_params",
                 "trigger_params",
-                "sensor_worker_selector",
-                "sensor_worker_tolerations",
-                "sensor_worker_affinity",
                 "enabled",
                 "created",
                 "updated"
@@ -35598,18 +35679,6 @@
                   "type": "string",
                   "description": "Unique reference identifier",
                   "example": "slack.notify_on_error"
-                },
-                "sensor_worker_affinity": {
-                  "type": "object"
-                },
-                "sensor_worker_selector": {
-                  "type": "object"
-                },
-                "sensor_worker_tolerations": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
                 },
                 "trace_tag_template": {
                   "type": [
@@ -37644,9 +37713,6 @@
           "conditions",
           "action_params",
           "trigger_params",
-          "sensor_worker_selector",
-          "sensor_worker_tolerations",
-          "sensor_worker_affinity",
           "enabled",
           "is_adhoc",
           "created",
@@ -37748,18 +37814,6 @@
             "description": "Unique reference identifier",
             "example": "slack.notify_on_error"
           },
-          "sensor_worker_affinity": {
-            "type": "object"
-          },
-          "sensor_worker_selector": {
-            "type": "object"
-          },
-          "sensor_worker_tolerations": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
-          },
           "trace_tag_template": {
             "type": [
               "string",
@@ -37806,9 +37860,6 @@
           "trigger_ref",
           "action_params",
           "trigger_params",
-          "sensor_worker_selector",
-          "sensor_worker_tolerations",
-          "sensor_worker_affinity",
           "enabled",
           "created",
           "updated"
@@ -37875,18 +37926,6 @@
             "type": "string",
             "description": "Unique reference identifier",
             "example": "slack.notify_on_error"
-          },
-          "sensor_worker_affinity": {
-            "type": "object"
-          },
-          "sensor_worker_selector": {
-            "type": "object"
-          },
-          "sensor_worker_tolerations": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
           },
           "trace_tag_template": {
             "type": [
@@ -40125,10 +40164,7 @@
         "required": [
           "conditions",
           "action_params",
-          "trigger_params",
-          "sensor_worker_selector",
-          "sensor_worker_tolerations",
-          "sensor_worker_affinity"
+          "trigger_params"
         ],
         "properties": {
           "action_params": {
@@ -40189,30 +40225,6 @@
             "example": [
               "core.agent_reader"
             ]
-          },
-          "sensor_worker_affinity": {
-            "type": [
-              "object",
-              "null"
-            ],
-            "description": "Replacement sensor-worker affinity."
-          },
-          "sensor_worker_selector": {
-            "type": [
-              "object",
-              "null"
-            ],
-            "description": "Replacement sensor-worker selector."
-          },
-          "sensor_worker_tolerations": {
-            "type": [
-              "array",
-              "null"
-            ],
-            "items": {
-              "type": "object"
-            },
-            "description": "Replacement sensor-worker tolerations."
           },
           "trace_tag_template": {
             "type": [
