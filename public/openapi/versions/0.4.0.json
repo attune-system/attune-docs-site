@@ -11,7 +11,7 @@
       "name": "MIT",
       "url": "https://opensource.org/licenses/MIT"
     },
-    "version": "0.5.1"
+    "version": "0.4.0"
   },
   "servers": [
     {
@@ -5260,22 +5260,15 @@
         "tags": [
           "caches"
         ],
-        "summary": "List cache namespaces visible to the caller, optionally within one owner scope.",
+        "summary": "List cache namespaces for one owner scope.",
         "operationId": "list_namespaces",
         "parameters": [
           {
             "name": "owner_type",
             "in": "query",
-            "required": false,
+            "required": true,
             "schema": {
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "$ref": "#/components/schemas/OwnerType"
-                }
-              ]
+              "$ref": "#/components/schemas/OwnerType"
             }
           },
           {
@@ -7934,9 +7927,6 @@
           },
           "401": {
             "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Token is not authorized to create this event"
           },
           "404": {
             "description": "Trigger not found"
@@ -11801,7 +11791,6 @@
                       "required": [
                         "id",
                         "ref",
-                        "local_ref",
                         "owner_type",
                         "name",
                         "encrypted",
@@ -11825,11 +11814,6 @@
                           "$ref": "#/components/schemas/i64",
                           "description": "Unique key ID"
                         },
-                        "local_ref": {
-                          "type": "string",
-                          "description": "Key identifier within its owner scope",
-                          "example": "github_token"
-                        },
                         "name": {
                           "type": "string",
                           "description": "Human-readable name",
@@ -11840,8 +11824,8 @@
                             "string",
                             "null"
                           ],
-                          "description": "Authoritative owner reference",
-                          "example": "github"
+                          "description": "Owner identifier",
+                          "example": "github-integration"
                         },
                         "owner_action": {
                           "oneOf": [
@@ -11918,7 +11902,7 @@
                         "ref": {
                           "type": "string",
                           "description": "Unique reference identifier",
-                          "example": "system.github_token"
+                          "example": "github_token"
                         },
                         "updated": {
                           "type": "string",
@@ -11993,7 +11977,6 @@
                       "required": [
                         "id",
                         "ref",
-                        "local_ref",
                         "owner_type",
                         "name",
                         "encrypted",
@@ -12017,11 +12000,6 @@
                           "$ref": "#/components/schemas/i64",
                           "description": "Unique key ID"
                         },
-                        "local_ref": {
-                          "type": "string",
-                          "description": "Key identifier within its owner scope",
-                          "example": "github_token"
-                        },
                         "name": {
                           "type": "string",
                           "description": "Human-readable name",
@@ -12032,8 +12010,8 @@
                             "string",
                             "null"
                           ],
-                          "description": "Authoritative owner reference",
-                          "example": "github"
+                          "description": "Owner identifier",
+                          "example": "github-integration"
                         },
                         "owner_action": {
                           "oneOf": [
@@ -12110,7 +12088,7 @@
                         "ref": {
                           "type": "string",
                           "description": "Unique reference identifier",
-                          "example": "system.github_token"
+                          "example": "github_token"
                         },
                         "updated": {
                           "type": "string",
@@ -12190,7 +12168,6 @@
                       "required": [
                         "id",
                         "ref",
-                        "local_ref",
                         "owner_type",
                         "name",
                         "encrypted",
@@ -12214,11 +12191,6 @@
                           "$ref": "#/components/schemas/i64",
                           "description": "Unique key ID"
                         },
-                        "local_ref": {
-                          "type": "string",
-                          "description": "Key identifier within its owner scope",
-                          "example": "github_token"
-                        },
                         "name": {
                           "type": "string",
                           "description": "Human-readable name",
@@ -12229,8 +12201,8 @@
                             "string",
                             "null"
                           ],
-                          "description": "Authoritative owner reference",
-                          "example": "github"
+                          "description": "Owner identifier",
+                          "example": "github-integration"
                         },
                         "owner_action": {
                           "oneOf": [
@@ -12307,7 +12279,7 @@
                         "ref": {
                           "type": "string",
                           "description": "Unique reference identifier",
-                          "example": "system.github_token"
+                          "example": "github_token"
                         },
                         "updated": {
                           "type": "string",
@@ -18396,7 +18368,7 @@
     "/api/v1/sensors/{sensor_ref}/logs": {
       "get": {
         "tags": [
-          "sensors"
+          "crate::routes::sensor_logs"
         ],
         "summary": "List available log streams for a sensor.",
         "operationId": "list_sensor_logs",
@@ -18429,7 +18401,7 @@
     "/api/v1/sensors/{sensor_ref}/logs/{stream}": {
       "get": {
         "tags": [
-          "sensors"
+          "crate::routes::sensor_logs"
         ],
         "summary": "Download a specific sensor log stream.",
         "description": "Resolves the sensor ref + stream to a log file on disk and serves\nthe content as plain text.",
@@ -20575,12 +20547,6 @@
                           "items": {
                             "type": "string"
                           }
-                        },
-                        "workload_fence": {
-                          "type": [
-                            "object",
-                            "null"
-                          ]
                         }
                       }
                     },
@@ -21293,6 +21259,110 @@
             "description": "User already exists"
           }
         }
+      }
+    },
+    "/auth/sensor-token": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Create sensor token endpoint (internal use by sensor service)",
+        "description": "POST /auth/sensor-token",
+        "operationId": "create_sensor_token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSensorTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Sensor token created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Standard API response wrapper",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Response for sensor token creation",
+                      "required": [
+                        "identity_id",
+                        "sensor_ref",
+                        "token",
+                        "expires_at",
+                        "trigger_types",
+                        "permission_set_refs"
+                      ],
+                      "properties": {
+                        "expires_at": {
+                          "type": "string"
+                        },
+                        "identity_id": {
+                          "type": "integer",
+                          "format": "int64"
+                        },
+                        "pack_ref": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "permission_set_refs": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "sensor_ref": {
+                          "type": "string"
+                        },
+                        "token": {
+                          "type": "string"
+                        },
+                        "trigger_types": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Optional message"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
       }
     },
     "/auth/settings": {
@@ -23966,7 +24036,6 @@
             "required": [
               "id",
               "ref",
-              "local_ref",
               "owner_type",
               "name",
               "encrypted",
@@ -23990,11 +24059,6 @@
                 "$ref": "#/components/schemas/i64",
                 "description": "Unique key ID"
               },
-              "local_ref": {
-                "type": "string",
-                "description": "Key identifier within its owner scope",
-                "example": "github_token"
-              },
               "name": {
                 "type": "string",
                 "description": "Human-readable name",
@@ -24005,8 +24069,8 @@
                   "string",
                   "null"
                 ],
-                "description": "Authoritative owner reference",
-                "example": "github"
+                "description": "Owner identifier",
+                "example": "github-integration"
               },
               "owner_action": {
                 "oneOf": [
@@ -24083,7 +24147,7 @@
               "ref": {
                 "type": "string",
                 "description": "Unique reference identifier",
-                "example": "system.github_token"
+                "example": "github_token"
               },
               "updated": {
                 "type": "string",
@@ -24830,9 +24894,6 @@
               "conditions",
               "action_params",
               "trigger_params",
-              "sensor_worker_selector",
-              "sensor_worker_tolerations",
-              "sensor_worker_affinity",
               "enabled",
               "is_adhoc",
               "created",
@@ -24933,18 +24994,6 @@
                 "type": "string",
                 "description": "Unique reference identifier",
                 "example": "slack.notify_on_error"
-              },
-              "sensor_worker_affinity": {
-                "type": "object"
-              },
-              "sensor_worker_selector": {
-                "type": "object"
-              },
-              "sensor_worker_tolerations": {
-                "type": "array",
-                "items": {
-                  "type": "object"
-                }
               },
               "trace_tag_template": {
                 "type": [
@@ -29224,7 +29273,7 @@
         "type": "object",
         "description": "Request to create a new key/secret",
         "required": [
-          "local_ref",
+          "ref",
           "owner_type",
           "name",
           "value"
@@ -29235,15 +29284,29 @@
             "description": "Whether to encrypt the value at rest (default: false; use --encrypt / -e from CLI)",
             "example": false
           },
-          "local_ref": {
-            "type": "string",
-            "description": "Identifier within the selected owner scope. The server uses it to construct the canonical ref.",
-            "example": "github_token"
-          },
           "name": {
             "type": "string",
             "description": "Human-readable name for the key",
             "example": "GitHub API Token"
+          },
+          "owner": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional owner string identifier",
+            "example": "github-integration"
+          },
+          "owner_action": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/i64",
+                "description": "Optional owner action ID"
+              }
+            ]
           },
           "owner_action_ref": {
             "type": [
@@ -29253,13 +29316,27 @@
             "description": "Optional owner action reference",
             "example": "github.create_issue"
           },
-          "owner_identity_login": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Optional owner identity login",
-            "example": "alice@example.com"
+          "owner_identity": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/i64",
+                "description": "Optional owner identity ID"
+              }
+            ]
+          },
+          "owner_pack": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/i64",
+                "description": "Optional owner pack ID"
+              }
+            ]
           },
           "owner_pack_ref": {
             "type": [
@@ -29268,6 +29345,17 @@
             ],
             "description": "Optional owner pack reference",
             "example": "github"
+          },
+          "owner_sensor": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/i64",
+                "description": "Optional owner sensor ID"
+              }
+            ]
           },
           "owner_sensor_ref": {
             "type": [
@@ -29280,6 +29368,11 @@
           "owner_type": {
             "$ref": "#/components/schemas/OwnerType",
             "description": "Type of owner (system, identity, pack, action, sensor)"
+          },
+          "ref": {
+            "type": "string",
+            "description": "Unique reference for the key (e.g., \"github_token\", \"aws_secret_key\")",
+            "example": "github_token"
           },
           "value": {
             "description": "The secret value to store. Can be a string, object, array, number, or boolean."
@@ -29592,21 +29685,6 @@
             "description": "Unique reference identifier (e.g., \"mypack.notify_on_error\")",
             "example": "slack.notify_on_error"
           },
-          "sensor_worker_affinity": {
-            "type": "object",
-            "description": "Required and preferred sensor-worker affinity for this rule."
-          },
-          "sensor_worker_selector": {
-            "type": "object",
-            "description": "Required labels for the sensor worker that runs this rule's managed sensor."
-          },
-          "sensor_worker_tolerations": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            },
-            "description": "Taints tolerated by the sensor worker for this rule."
-          },
           "trace_tag_template": {
             "type": [
               "string",
@@ -29801,6 +29879,49 @@
             },
             "description": "Worker taints tolerated by this sensor process.",
             "default": []
+          }
+        }
+      },
+      "CreateSensorTokenRequest": {
+        "type": "object",
+        "description": "Request body for creating sensor tokens",
+        "required": [
+          "sensor_ref",
+          "trigger_types"
+        ],
+        "properties": {
+          "pack_ref": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Registered pack reference. Internal worker callers must provide it;\npublic callers may omit it and let the API resolve it."
+          },
+          "permission_set_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Explicit sensor cache permission-set refs. `standard` grants read-only\naccess to the registered sensor and pack cache scopes."
+          },
+          "sensor_ref": {
+            "type": "string",
+            "description": "Sensor reference (e.g., \"core.timer\")"
+          },
+          "trigger_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of trigger types this sensor can create events for"
+          },
+          "ttl_seconds": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Optional TTL in seconds (default: 86400 = 24 hours, max: 259200 = 72 hours)"
           }
         }
       },
@@ -32539,14 +32660,6 @@
         "type": "object",
         "description": "Request body for internal sensor token creation/reissue.\n\nWorker/service tokens must provide `sensor_ref` and `trigger_types`.\nSensor-token refresh calls may omit those fields; the server will derive them\nfrom authenticated identity state.",
         "properties": {
-          "assignment_generation": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64",
-            "description": "Current sensor workload assignment generation (required for worker/service callers)."
-          },
           "pack_ref": {
             "type": [
               "string",
@@ -32588,22 +32701,6 @@
             ],
             "format": "int64",
             "description": "Optional TTL in seconds (default: 86400 = 24 hours, max: 259200 = 72 hours)"
-          },
-          "worker_instance": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uuid",
-            "description": "Worker process instance that owns the assignment (required for worker/service callers)."
-          },
-          "workload_id": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64",
-            "description": "Assigned sensor workload ID (required for worker/service callers)."
           }
         }
       },
@@ -32613,7 +32710,6 @@
         "required": [
           "id",
           "ref",
-          "local_ref",
           "owner_type",
           "name",
           "encrypted",
@@ -32637,11 +32733,6 @@
             "$ref": "#/components/schemas/i64",
             "description": "Unique key ID"
           },
-          "local_ref": {
-            "type": "string",
-            "description": "Key identifier within its owner scope",
-            "example": "github_token"
-          },
           "name": {
             "type": "string",
             "description": "Human-readable name",
@@ -32652,8 +32743,8 @@
               "string",
               "null"
             ],
-            "description": "Authoritative owner reference",
-            "example": "github"
+            "description": "Owner identifier",
+            "example": "github-integration"
           },
           "owner_action": {
             "oneOf": [
@@ -32730,7 +32821,7 @@
           "ref": {
             "type": "string",
             "description": "Unique reference identifier",
-            "example": "system.github_token"
+            "example": "github_token"
           },
           "updated": {
             "type": "string",
@@ -32749,7 +32840,6 @@
         "required": [
           "id",
           "ref",
-          "local_ref",
           "owner_type",
           "name",
           "encrypted",
@@ -32771,11 +32861,6 @@
             "$ref": "#/components/schemas/i64",
             "description": "Unique key ID"
           },
-          "local_ref": {
-            "type": "string",
-            "description": "Key identifier within its owner scope",
-            "example": "github_token"
-          },
           "name": {
             "type": "string",
             "description": "Human-readable name",
@@ -32786,8 +32871,8 @@
               "string",
               "null"
             ],
-            "description": "Authoritative owner reference",
-            "example": "github"
+            "description": "Owner identifier",
+            "example": "github-integration"
           },
           "owner_type": {
             "$ref": "#/components/schemas/OwnerType",
@@ -32796,7 +32881,7 @@
           "ref": {
             "type": "string",
             "description": "Unique reference identifier",
-            "example": "system.github_token"
+            "example": "github_token"
           }
         }
       },
@@ -35171,7 +35256,6 @@
               "required": [
                 "id",
                 "ref",
-                "local_ref",
                 "owner_type",
                 "name",
                 "encrypted",
@@ -35193,11 +35277,6 @@
                   "$ref": "#/components/schemas/i64",
                   "description": "Unique key ID"
                 },
-                "local_ref": {
-                  "type": "string",
-                  "description": "Key identifier within its owner scope",
-                  "example": "github_token"
-                },
                 "name": {
                   "type": "string",
                   "description": "Human-readable name",
@@ -35208,8 +35287,8 @@
                     "string",
                     "null"
                   ],
-                  "description": "Authoritative owner reference",
-                  "example": "github"
+                  "description": "Owner identifier",
+                  "example": "github-integration"
                 },
                 "owner_type": {
                   "$ref": "#/components/schemas/OwnerType",
@@ -35218,7 +35297,7 @@
                 "ref": {
                   "type": "string",
                   "description": "Unique reference identifier",
-                  "example": "system.github_token"
+                  "example": "github_token"
                 }
               }
             },
@@ -35529,9 +35608,6 @@
                 "trigger_ref",
                 "action_params",
                 "trigger_params",
-                "sensor_worker_selector",
-                "sensor_worker_tolerations",
-                "sensor_worker_affinity",
                 "enabled",
                 "created",
                 "updated"
@@ -35598,18 +35674,6 @@
                   "type": "string",
                   "description": "Unique reference identifier",
                   "example": "slack.notify_on_error"
-                },
-                "sensor_worker_affinity": {
-                  "type": "object"
-                },
-                "sensor_worker_selector": {
-                  "type": "object"
-                },
-                "sensor_worker_tolerations": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
                 },
                 "trace_tag_template": {
                   "type": [
@@ -37644,9 +37708,6 @@
           "conditions",
           "action_params",
           "trigger_params",
-          "sensor_worker_selector",
-          "sensor_worker_tolerations",
-          "sensor_worker_affinity",
           "enabled",
           "is_adhoc",
           "created",
@@ -37748,18 +37809,6 @@
             "description": "Unique reference identifier",
             "example": "slack.notify_on_error"
           },
-          "sensor_worker_affinity": {
-            "type": "object"
-          },
-          "sensor_worker_selector": {
-            "type": "object"
-          },
-          "sensor_worker_tolerations": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
-          },
           "trace_tag_template": {
             "type": [
               "string",
@@ -37806,9 +37855,6 @@
           "trigger_ref",
           "action_params",
           "trigger_params",
-          "sensor_worker_selector",
-          "sensor_worker_tolerations",
-          "sensor_worker_affinity",
           "enabled",
           "created",
           "updated"
@@ -37875,18 +37921,6 @@
             "type": "string",
             "description": "Unique reference identifier",
             "example": "slack.notify_on_error"
-          },
-          "sensor_worker_affinity": {
-            "type": "object"
-          },
-          "sensor_worker_selector": {
-            "type": "object"
-          },
-          "sensor_worker_tolerations": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
           },
           "trace_tag_template": {
             "type": [
@@ -40125,10 +40159,7 @@
         "required": [
           "conditions",
           "action_params",
-          "trigger_params",
-          "sensor_worker_selector",
-          "sensor_worker_tolerations",
-          "sensor_worker_affinity"
+          "trigger_params"
         ],
         "properties": {
           "action_params": {
@@ -40189,30 +40220,6 @@
             "example": [
               "core.agent_reader"
             ]
-          },
-          "sensor_worker_affinity": {
-            "type": [
-              "object",
-              "null"
-            ],
-            "description": "Replacement sensor-worker affinity."
-          },
-          "sensor_worker_selector": {
-            "type": [
-              "object",
-              "null"
-            ],
-            "description": "Replacement sensor-worker selector."
-          },
-          "sensor_worker_tolerations": {
-            "type": [
-              "array",
-              "null"
-            ],
-            "items": {
-              "type": "object"
-            },
-            "description": "Replacement sensor-worker tolerations."
           },
           "trace_tag_template": {
             "type": [

@@ -1,3 +1,7 @@
+---
+import versionCatalog from "../../public/openapi/versions.json";
+---
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -14,21 +18,67 @@
       .api-bar a:hover { color: #75dfd4; }
       .api-bar .back { margin-left: auto; }
       .api-bar span { color: #7f8da3; font-family: ui-monospace, monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+      .api-version { display: flex; align-items: center; gap: .5rem; }
+      .api-version select { border: 1px solid #46556d; border-radius: 5px; padding: .35rem 1.8rem .35rem .55rem; color: #f2f6fa; background: #182338; font: inherit; }
+      .version-warning { margin: 0; padding: .55rem 1.2rem; color: #7a2f10; background: #fff1df; font: 600 13px system-ui, sans-serif; }
+      .version-warning[hidden] { display: none; }
+      @media (max-width: 720px) {
+        .api-bar { flex-wrap: wrap; gap: .65rem 1rem; padding-block: .6rem; }
+        .api-bar .back { margin-left: 0; }
+        .api-bar > span { display: none; }
+      }
     </style>
   </head>
   <body>
     <nav class="api-bar" aria-label="API explorer navigation">
       <a href="/" aria-label="Attune documentation home"><img src="/attune-logo-navbar.svg" alt="Attune" /></a>
       <span>API explorer</span>
+      <label class="api-version" for="api-version">
+        Version
+        <select id="api-version">
+          {versionCatalog.versions.map((entry) => (
+            <option value={entry.version}>
+              {entry.version === versionCatalog.latest ? `${entry.version} (latest)` : entry.version}
+            </option>
+          ))}
+        </select>
+      </label>
       <a class="back" href="/">← Documentation</a>
-      <a href="/openapi.json">OpenAPI JSON</a>
+      <a id="openapi-json" href="/openapi.json">OpenAPI JSON</a>
     </nav>
+    <p class="version-warning" id="version-warning" role="status" hidden></p>
     <div id="scalar-api"></div>
     <script is:inline src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.66.1"></script>
-    <script is:inline>
+    <script is:inline define:vars={{ versionCatalog }}>
+      const params = new URLSearchParams(window.location.search);
+      const requestedVersion = params.get("version");
+      const selected = versionCatalog.versions.find(
+        (entry) => entry.version === requestedVersion,
+      ) ?? versionCatalog.versions[0];
+      const versionSelect = document.querySelector("#api-version");
+      const jsonLink = document.querySelector("#openapi-json");
+      const warning = document.querySelector("#version-warning");
+
+      versionSelect.value = selected.version;
+      jsonLink.href = selected.url;
+
+      if (requestedVersion && requestedVersion !== selected.version) {
+        warning.textContent = `API version ${requestedVersion} is not available. Showing ${selected.version}.`;
+        warning.hidden = false;
+      }
+
+      versionSelect.addEventListener("change", () => {
+        const version = versionSelect.value;
+        window.location.assign(
+          version === versionCatalog.latest
+            ? "/api/"
+            : `/api/?version=${encodeURIComponent(version)}`,
+        );
+      });
+
       Scalar.createApiReference("#scalar-api", {
-        url: "/openapi.json",
-        pageTitle: "Attune API explorer",
+        url: selected.url,
+        pageTitle: `Attune ${selected.version} API explorer`,
         theme: "purple",
         layout: "modern",
         hideClientButton: true,

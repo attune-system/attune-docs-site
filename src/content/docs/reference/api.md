@@ -80,10 +80,12 @@ permission and preserves the existing owner.
 
 ## OpenAPI
 
-This documentation repository stores a versioned snapshot of the API contract:
+This documentation repository stores the latest API contract and immutable
+historical versions:
 
 - [OpenAPI JSON](/openapi.json)
 - [Interactive API explorer](/api/)
+- [Available versions](/openapi/versions.json)
 
 The running API also serves Swagger UI at `/docs` and live OpenAPI JSON at
 `/api-spec/openapi.json`. To refresh this site's snapshot, export the contract
@@ -94,6 +96,10 @@ cargo run --quiet -p attune-api --bin export-openapi -- web/openapi.json
 cd /path/to/attune-docs-site
 npm run import:openapi -- /path/to/attune/web/openapi.json
 ```
+
+When the API version changes, the importer archives the previous contract at
+`/openapi/versions/<version>.json`. Use the version selector in the API explorer
+to open an older contract.
 
 The Web UI client can be regenerated from the running API.
 

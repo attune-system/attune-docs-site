@@ -45,9 +45,16 @@ npm run import:openapi -- /path/to/openapi.json
 npm run verify
 ```
 
-The import command also accepts an HTTP URL. Commit `public/openapi.json` with
-the related documentation change. The API explorer loads a pinned Scalar
-bundle and does not persist authentication data.
+The import command also accepts an HTTP URL. It keeps `public/openapi.json` as
+the latest contract and archives the previous contract at
+`public/openapi/versions/<version>.json` when the API version changes. Commit
+the latest contract, archived contracts, and `public/openapi/versions.json`
+together. The importer records each file's SHA-256 and refuses to replace a
+historical version with different content.
+
+The API explorer reads the version catalog and lets readers switch between the
+latest and archived contracts. It loads a pinned Scalar bundle and does not
+persist authentication data.
 
 ## Client behavior
 
