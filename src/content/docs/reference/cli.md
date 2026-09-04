@@ -262,16 +262,18 @@ Workflow upload reads `workflow_file` from the action YAML and uploads both acti
 
 ```bash
 attune key list
-attune key show my_token
-attune key show my_token --decrypt
-attune key create --ref my_token --name "Token" --value "secret" --encrypt
-attune key update my_token --value '{"host":"db","port":5432}'
-attune key delete my_token --yes
+attune key create --local-ref my_token --name "Token" --value "secret" --encrypt
+attune key show system.my_token
+attune key show system.my_token --decrypt
+attune key update system.my_token --value '{"host":"db","port":5432}'
+attune key delete system.my_token --yes
 ```
 
-Keys can store structured JSON, not just strings.
+Keys can store structured JSON, not just strings. Attune combines the owner scope and `--local-ref` into a canonical ref such as `system.my_token` or `pack.my_pack.api_token`.
 
-By default, `key show` is metadata/digest retrieval and does not request or receive plaintext key material; encrypted values remain redacted at the API boundary. The displayed SHA-256 digest represents the key's serialized JSON value, not necessarily the raw bytes of a string. Use `--decrypt` only when plaintext is explicitly required and the caller has a matching `keys:decrypt` grant.
+`key show` reads the key through the API. If the caller has a matching `keys:decrypt` grant, the API returns plaintext and the CLI displays its SHA-256 digest by default. `--decrypt` displays the returned value instead. Without the decrypt grant, the API returns null for an encrypted value.
+
+See [Keys and secrets](/administration/keys-and-secrets/) for owner flags, canonical refs, UI operations, and execution access.
 
 ## Data Caches
 

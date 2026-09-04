@@ -55,6 +55,8 @@ Cross-owner access to non-standard packs requires meaningful constrained grants.
 
 Keys are scoped by owner type and owner ref. Identity-owned keys are visible/decryptable/mutable only by the owner unless a constrained `keys:*` grant matches the key scope. Broad unconstrained key grants do not reveal another identity's keys.
 
+Canonical refs include the owner scope, such as `system.github_token` or `pack.my_pack.api_credentials`. See [Keys and secrets](/administration/keys-and-secrets/) for creation, encryption, and execution delivery.
+
 ## Data Caches
 
 Data Caches use the dedicated `caches` resource with `read`, `create`,
@@ -200,7 +202,7 @@ grants:
       owner_types: [pack]
       owner_refs: [my_pack]
       refs:
-        - my_pack.api_credentials
+        - pack.my_pack.api_credentials
       encrypted: true
   - resource: caches
     actions: [read]

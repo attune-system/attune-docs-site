@@ -122,6 +122,8 @@ Sensor workers advertise matching labels and taints through `sensor.labels` and 
 
 `worker_selector`, required affinity, anti-affinity, and tolerations constrain eligibility. Preferred affinity is currently stored but is not used to score sensor placement, so do not rely on it to choose among eligible sensor workers.
 
+Rules can add `sensor_worker_selector`, `sensor_worker_tolerations`, and `sensor_worker_affinity` for the managed sensor workload that supplies their trigger. Attune combines pack, sensor, and enabled-rule placement. All enabled rules that share a sensor must remain compatible. See [Sensor worker placement](/pack-development/rules/#sensor-worker-placement).
+
 Multi-trigger native sensor example:
 
 ```yaml

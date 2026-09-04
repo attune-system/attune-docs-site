@@ -145,7 +145,7 @@ grants:
     constraints:
       owner_types: [pack]
       owner_refs: [my_pack]
-      refs: [my_pack.api_credentials]
+      refs: [pack.my_pack.api_credentials]
       encrypted: true
   - resource: artifacts
     actions: [read, create, update]

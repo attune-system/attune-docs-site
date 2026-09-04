@@ -32,6 +32,9 @@ Rules can be deployed declaratively with packs from `rules/*.yaml`. Rules create
 | `conditions` | Optional match criteria evaluated against the event. Empty object, empty array, or `null` means always match. |
 | `action_params` | Flat parameter object rendered into the enforcement/execution config. |
 | `trigger_params` | Optional trigger/sensor configuration data associated with the rule. The API validates it against the trigger schema and publishes rule-created/enabled messages so interested sensor components can react. |
+| `sensor_worker_selector` | Required labels for the sensor worker that runs this rule's managed sensor. Default: `{}`. |
+| `sensor_worker_tolerations` | Sensor-worker taints tolerated by this rule. Default: `[]`. |
+| `sensor_worker_affinity` | Required and preferred label affinity for sensor workers. Default: `{}`. |
 | `trace_tag_template` | Optional template used to derive the enforcement/execution trace tag from event, pack, and system context. |
 | `permission_set_refs` | Optional execution permission refs delegated to rule-triggered executions. A string or array is accepted; `permission_set_ref` is a singular compatibility alias in pack YAML. Omission/`null` means no rule-level refs, and an explicit empty array also requests no refs. |
 | `enabled` | Disabled rules are skipped. |
@@ -82,6 +85,17 @@ enabled: true
 trigger_params:
   query: 'environment:prod priority:high'
   interval_seconds: 30
+sensor_worker_selector:
+  location: edge-site-nyc
+sensor_worker_tolerations:
+  - key: dedicated
+    operator: equal
+    value: sensors
+    effect: no_schedule
+sensor_worker_affinity:
+  required:
+    - match_labels:
+        network: internal
 conditions:
   - field: environment
     operator: equals
@@ -110,6 +124,36 @@ conditions: {}
 action_params:
   mode: daily
 ```
+
+## Sensor worker placement
+
+Rule-level sensor placement controls the managed sensor process that supplies the rule's trigger. It does not control the action execution created after an event matches. Use action or execution placement fields for that work.
+
+Attune combines placement from the pack, the sensor, and every enabled rule that uses the same managed sensor. Selectors and required affinity are cumulative, while tolerations are combined. A worker must satisfy the resulting constraints and support the sensor runtime.
+
+This means two enabled rules can make one sensor workload impossible to place. Attune rejects structurally conflicting placement and checks for an eligible live worker when the operation requires live admission. Keep shared sensor constraints compatible across rules.
+
+Do not set these fields on a rule whose trigger has no managed sensor, such as a webhook trigger. Attune rejects placement on unmanaged triggers.
+
+Preferred affinity is stored but does not score sensor-worker placement. Use `sensor_worker_selector` or required affinity when the worker choice matters.
+
+Rule YAML example:
+
+```yaml
+sensor_worker_selector:
+  location: edge-site-nyc
+sensor_worker_tolerations:
+  - key: dedicated
+    operator: equal
+    value: sensors
+    effect: no_schedule
+sensor_worker_affinity:
+  required:
+    - match_labels:
+        network: internal
+```
+
+The Web UI exposes the same fields under **Sensor Worker Placement** when you create or edit a rule.
 
 ## Conditions
 
@@ -227,6 +271,11 @@ curl -sS -X POST "$ATTUNE_API_URL/api/v1/rules" \
       "details": "{{ event.payload }}"
     },
     "trigger_params": {},
+    "sensor_worker_selector": {
+      "location": "edge-site-nyc"
+    },
+    "sensor_worker_tolerations": [],
+    "sensor_worker_affinity": {},
     "enabled": true
   }'
 ```

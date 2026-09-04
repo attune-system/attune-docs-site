@@ -248,10 +248,10 @@ conf_schema:
 Then create a pack-scoped key for the token:
 
 ```bash
-attune key create --ref my_pack.api_token --name "API Token" --value "secret" --encrypt --owner-type pack --owner-pack-ref my_pack
+attune key create --local-ref api_token --name "API Token" --value "secret" --encrypt --owner-type pack --owner-pack-ref my_pack
 ```
 
-Actions and workflows can access keys only when their execution token permission refs allow it, typically through `standard` for same-pack action/pack-scoped keys.
+Attune creates the canonical ref `pack.my_pack.api_token`. Actions and workflows can access keys only when their execution token permission refs allow it, typically through `standard` for same-pack action/pack-scoped keys. See [Keys and secrets](/administration/keys-and-secrets/).
 
 ## Flat schemas
 
