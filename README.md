@@ -66,7 +66,7 @@ Datastar. Do not add React or another SPA framework.
 ## Deploy with Helm
 
 The deployment pulls the public
-`ghcr.io/attune-system/attune-docs-site:0.1.2` image. Add the Attune chart
+`ghcr.io/attune-system/attune-docs-site:0.1.3` image. Add the Attune chart
 repository, then install the chart with `deploy/helm-values.yaml`:
 
 ```bash
