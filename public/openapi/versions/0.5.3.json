@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.6.0"
+    "version": "0.5.3"
   },
   "servers": [
     {
@@ -2836,17 +2836,6 @@
                           "format": "int64",
                           "description": "Parent artifact ID"
                         },
-                        "body_state": {
-                          "oneOf": [
-                            {
-                              "type": "null"
-                            },
-                            {
-                              "$ref": "#/components/schemas/ArtifactBodyState",
-                              "description": "Object-backed body lifecycle. NULL identifies an unmigrated row."
-                            }
-                          ]
-                        },
                         "content_json": {
                           "oneOf": [
                             {
@@ -2907,27 +2896,6 @@
                               "description": "Free-form metadata"
                             }
                           ]
-                        },
-                        "object_key": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "Immutable object-store locator."
-                        },
-                        "provider_version": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "Opaque provider generation, version ID, or ETag pinned for reads."
-                        },
-                        "sha256": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "SHA-256 digest of the ready body."
                         },
                         "size_bytes": {
                           "type": [
@@ -3023,17 +2991,6 @@
                           "format": "int64",
                           "description": "Parent artifact ID"
                         },
-                        "body_state": {
-                          "oneOf": [
-                            {
-                              "type": "null"
-                            },
-                            {
-                              "$ref": "#/components/schemas/ArtifactBodyState",
-                              "description": "Object-backed body lifecycle. NULL identifies an unmigrated row."
-                            }
-                          ]
-                        },
                         "content_json": {
                           "oneOf": [
                             {
@@ -3094,27 +3051,6 @@
                               "description": "Free-form metadata"
                             }
                           ]
-                        },
-                        "object_key": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "Immutable object-store locator."
-                        },
-                        "provider_version": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "Opaque provider generation, version ID, or ETag pinned for reads."
-                        },
-                        "sha256": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "SHA-256 digest of the ready body."
                         },
                         "size_bytes": {
                           "type": [
@@ -3742,17 +3678,8 @@
               "application/octet-stream": {}
             }
           },
-          "206": {
-            "description": "Requested byte range",
-            "content": {
-              "application/octet-stream": {}
-            }
-          },
           "404": {
             "description": "Artifact not found or no versions"
-          },
-          "416": {
-            "description": "Requested range is not satisfiable"
           }
         },
         "security": [
@@ -4021,16 +3948,6 @@
                           "created"
                         ],
                         "properties": {
-                          "body_state": {
-                            "oneOf": [
-                              {
-                                "type": "null"
-                              },
-                              {
-                                "$ref": "#/components/schemas/ArtifactBodyState"
-                              }
-                            ]
-                          },
                           "content_type": {
                             "type": [
                               "string",
@@ -4069,24 +3986,6 @@
                             "type": "integer",
                             "format": "int64",
                             "description": "Version ID"
-                          },
-                          "object_key": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "provider_version": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "sha256": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
                           },
                           "size_bytes": {
                             "type": [
@@ -4181,17 +4080,6 @@
                           "format": "int64",
                           "description": "Parent artifact ID"
                         },
-                        "body_state": {
-                          "oneOf": [
-                            {
-                              "type": "null"
-                            },
-                            {
-                              "$ref": "#/components/schemas/ArtifactBodyState",
-                              "description": "Object-backed body lifecycle. NULL identifies an unmigrated row."
-                            }
-                          ]
-                        },
                         "content_json": {
                           "oneOf": [
                             {
@@ -4252,27 +4140,6 @@
                               "description": "Free-form metadata"
                             }
                           ]
-                        },
-                        "object_key": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "Immutable object-store locator."
-                        },
-                        "provider_version": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "Opaque provider generation, version ID, or ETag pinned for reads."
-                        },
-                        "sha256": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "SHA-256 digest of the ready body."
                         },
                         "size_bytes": {
                           "type": [
@@ -4369,17 +4236,6 @@
                           "format": "int64",
                           "description": "Parent artifact ID"
                         },
-                        "body_state": {
-                          "oneOf": [
-                            {
-                              "type": "null"
-                            },
-                            {
-                              "$ref": "#/components/schemas/ArtifactBodyState",
-                              "description": "Object-backed body lifecycle. NULL identifies an unmigrated row."
-                            }
-                          ]
-                        },
                         "content_json": {
                           "oneOf": [
                             {
@@ -4440,27 +4296,6 @@
                               "description": "Free-form metadata"
                             }
                           ]
-                        },
-                        "object_key": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "Immutable object-store locator."
-                        },
-                        "provider_version": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "Opaque provider generation, version ID, or ETag pinned for reads."
-                        },
-                        "sha256": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "SHA-256 digest of the ready body."
                         },
                         "size_bytes": {
                           "type": [
@@ -4549,17 +4384,6 @@
                           "format": "int64",
                           "description": "Parent artifact ID"
                         },
-                        "body_state": {
-                          "oneOf": [
-                            {
-                              "type": "null"
-                            },
-                            {
-                              "$ref": "#/components/schemas/ArtifactBodyState",
-                              "description": "Object-backed body lifecycle. NULL identifies an unmigrated row."
-                            }
-                          ]
-                        },
                         "content_json": {
                           "oneOf": [
                             {
@@ -4620,27 +4444,6 @@
                               "description": "Free-form metadata"
                             }
                           ]
-                        },
-                        "object_key": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "Immutable object-store locator."
-                        },
-                        "provider_version": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "Opaque provider generation, version ID, or ETag pinned for reads."
-                        },
-                        "sha256": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "SHA-256 digest of the ready body."
                         },
                         "size_bytes": {
                           "type": [
@@ -4737,17 +4540,6 @@
                           "format": "int64",
                           "description": "Parent artifact ID"
                         },
-                        "body_state": {
-                          "oneOf": [
-                            {
-                              "type": "null"
-                            },
-                            {
-                              "$ref": "#/components/schemas/ArtifactBodyState",
-                              "description": "Object-backed body lifecycle. NULL identifies an unmigrated row."
-                            }
-                          ]
-                        },
                         "content_json": {
                           "oneOf": [
                             {
@@ -4808,27 +4600,6 @@
                               "description": "Free-form metadata"
                             }
                           ]
-                        },
-                        "object_key": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "Immutable object-store locator."
-                        },
-                        "provider_version": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "Opaque provider generation, version ID, or ETag pinned for reads."
-                        },
-                        "sha256": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "SHA-256 digest of the ready body."
                         },
                         "size_bytes": {
                           "type": [
@@ -4930,17 +4701,6 @@
                           "format": "int64",
                           "description": "Parent artifact ID"
                         },
-                        "body_state": {
-                          "oneOf": [
-                            {
-                              "type": "null"
-                            },
-                            {
-                              "$ref": "#/components/schemas/ArtifactBodyState",
-                              "description": "Object-backed body lifecycle. NULL identifies an unmigrated row."
-                            }
-                          ]
-                        },
                         "content_json": {
                           "oneOf": [
                             {
@@ -5001,27 +4761,6 @@
                               "description": "Free-form metadata"
                             }
                           ]
-                        },
-                        "object_key": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "Immutable object-store locator."
-                        },
-                        "provider_version": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "Opaque provider generation, version ID, or ETag pinned for reads."
-                        },
-                        "sha256": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "description": "SHA-256 digest of the ready body."
                         },
                         "size_bytes": {
                           "type": [
@@ -5147,17 +4886,8 @@
               "application/octet-stream": {}
             }
           },
-          "206": {
-            "description": "Requested byte range",
-            "content": {
-              "application/octet-stream": {}
-            }
-          },
           "404": {
             "description": "Artifact, version, or content not found"
-          },
-          "416": {
-            "description": "Requested range is not satisfiable"
           }
         },
         "security": [
@@ -9517,7 +9247,7 @@
           "executions"
         ],
         "summary": "Stream stdout/stderr for an execution as SSE.",
-        "description": "This tails the immutable segments committed by the worker. The stream may\nnot exist yet when the worker has not allocated its log artifacts.",
+        "description": "This tails the worker's live log files directly from the shared artifacts\nvolume. The file may not exist yet when the worker has not emitted any\noutput, so the stream waits briefly for it to appear.",
         "operationId": "stream_execution_log",
         "parameters": [
           {
@@ -11676,12 +11406,6 @@
               "application/octet-stream": {}
             }
           },
-          "206": {
-            "description": "Requested byte range",
-            "content": {
-              "application/octet-stream": {}
-            }
-          },
           "400": {
             "description": "Invalid file path"
           },
@@ -11690,9 +11414,6 @@
           },
           "404": {
             "description": "File not found"
-          },
-          "416": {
-            "description": "Requested range is not satisfiable"
           }
         },
         "security": [
@@ -11822,6 +11543,54 @@
             "bearer_auth": []
           }
         ]
+      },
+      "patch": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Append content to an existing file (or create it).",
+        "description": "Used for streaming log writes — workers send periodic chunks.",
+        "operationId": "append_to_file",
+        "parameters": [
+          {
+            "name": "file_path",
+            "in": "path",
+            "description": "Relative artifact file path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "File content appended"
+          },
+          "400": {
+            "description": "Invalid file path"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "413": {
+            "description": "Payload too large"
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
       }
     },
     "/api/v1/internal/pack-installs/{pack_install_id}/archive": {
@@ -11878,7 +11647,7 @@
         "tags": [
           "internal"
         ],
-        "summary": "Return the deterministic archive for a pack's active release.",
+        "summary": "Stream a pack directory as a `.tar.gz` archive.",
         "description": "Used by remote workers/sensors to download pack contents when they\ndon't share a mounted volume with the API.",
         "operationId": "download_pack_archive",
         "parameters": [
@@ -11899,12 +11668,6 @@
               "application/gzip": {}
             }
           },
-          "206": {
-            "description": "Requested pack archive byte range",
-            "content": {
-              "application/gzip": {}
-            }
-          },
           "400": {
             "description": "Invalid pack reference"
           },
@@ -11913,9 +11676,6 @@
           },
           "404": {
             "description": "Pack not found"
-          },
-          "416": {
-            "description": "Requested range is not satisfiable"
           }
         },
         "security": [
@@ -26786,14 +26546,6 @@
             "minimum": 0
           }
         }
-      },
-      "ArtifactBodyState": {
-        "type": "string",
-        "enum": [
-          "pending",
-          "ready",
-          "deleting"
-        ]
       },
       "ArtifactClassification": {
         "type": "string",
