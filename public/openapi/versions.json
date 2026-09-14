@@ -1,10 +1,15 @@
 {
   "schema_version": 1,
-  "latest": "0.6.0",
+  "latest": "0.6.2",
   "versions": [
     {
-      "version": "0.6.0",
+      "version": "0.6.2",
       "url": "/openapi.json",
+      "sha256": "fd388ab737b967df45119de691b7daf148668ddf171d220c03414af91fb1099c"
+    },
+    {
+      "version": "0.6.0",
+      "url": "/openapi/versions/0.6.0.json",
       "sha256": "dcdf5d4bccc38c0e7bf108996d1c9031ef44e1b002ca500f3f22537de8cef023"
     },
     {

@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.6.2"
+    "version": "0.6.0"
   },
   "servers": [
     {
@@ -9517,7 +9517,7 @@
           "executions"
         ],
         "summary": "Stream stdout/stderr for an execution as SSE.",
-        "description": "This tails the stream backend selected when the worker allocates its log\nartifacts. The stream may not exist yet while allocation is pending.\nAn explicit `offset` query parameter takes precedence over `Last-Event-ID`.",
+        "description": "This tails the immutable segments committed by the worker. The stream may\nnot exist yet when the worker has not allocated its log artifacts.",
         "operationId": "stream_execution_log",
         "parameters": [
           {
@@ -9542,24 +9542,10 @@
           {
             "name": "offset",
             "in": "query",
-            "description": "Resume from this byte offset; takes precedence over Last-Event-ID",
+            "description": "Resume streaming from this byte offset",
             "required": false,
             "schema": {
               "type": "integer",
-              "format": "int64",
-              "minimum": 0
-            }
-          },
-          {
-            "name": "Last-Event-ID",
-            "in": "header",
-            "description": "Resume from this byte offset when offset is omitted",
-            "required": false,
-            "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
               "format": "int64",
               "minimum": 0
             }
@@ -9577,9 +9563,6 @@
           },
           "404": {
             "description": "Execution not found"
-          },
-          "429": {
-            "description": "Execution log stream limit reached"
           }
         }
       }
@@ -26809,8 +26792,7 @@
         "enum": [
           "pending",
           "ready",
-          "deleting",
-          "cleanup_claimed"
+          "deleting"
         ]
       },
       "ArtifactClassification": {
