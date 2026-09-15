@@ -308,7 +308,7 @@ output:
 
 ## Emitting events and enqueueing queue items
 
-For Attune/OpenAPI `0.3.0`, target SDK `0.3.0` in every runtime. Python actions use the `attune-sdk` distribution (`pip install attune-sdk==0.3.0`) and `import attune`. Node.js actions use the `attune-sdk` package (`npm install attune-sdk@0.3.0`), importing action helpers from `attune-sdk` and generated API functions from `attune-sdk/api_client`. Java uses Maven coordinates `io.attune:attune-sdk:0.3.0` and `io.attune` imports. The SDK context client uses the execution-scoped token and API URL; never read, print, or pass `ATTUNE_API_TOKEN` yourself.
+For Attune/OpenAPI `0.3.0`, Python actions use the `attune-sdk` distribution (`pip install attune-sdk==0.3.0`) and `import attune`. Node.js actions use the `attune-sdk` package (`npm install attune-sdk@0.3.0`), importing action helpers from `attune-sdk` and generated API functions from `attune-sdk/api_client`. The Java SDK source currently uses coordinates `org.attunedev:attune-sdk:0.2.3` and `io.attune` imports; build the JAR from that repository or use an attached release artifact until it is published to a Maven repository. The SDK context client uses the execution-scoped token and API URL; never read, print, or pass `ATTUNE_API_TOKEN` yourself.
 
 An action needs at least one execution permission-set ref so Attune issues that token. Event creation accepts execution tokens directly, so `standard` is sufficient. Enqueueing also requires `queue_items:create` scoped to the target queue:
 

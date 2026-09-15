@@ -175,17 +175,17 @@ Sensor-generated events use sensor-specific auth/event-emission paths rather tha
 
 ## SDK behavior
 
-For Attune/OpenAPI `0.3.0`, target SDK `0.3.0` in every runtime.
+For Attune/OpenAPI `0.3.0`, use SDK `0.3.0` for Python and Node.js. The Java SDK currently reports version `0.2.3`.
 
 | Runtime | Package and imports | Current managed-sensor behavior |
 | --- | --- | --- |
 | Python | `pip install "attune-sdk[sensor]==0.3.0"`; `import attune` | Numeric rule targeting is the default when `rule=` is supplied; `target_rule=False` broadcasts explicitly. Supports notifier WebSocket lifecycle updates. |
 | Node.js | `npm install attune-sdk@0.3.0`; import from `attune-sdk` | Numeric rule targeting is the default when `{ rule }` is supplied; `targetRule: false` broadcasts explicitly. Supports notifier WebSocket lifecycle updates. |
-| Java | Maven `io.attune:attune-sdk:0.3.0`; imports under `io.attune` | Numeric rule targeting is the default when `.rule(rule)` is supplied; `.targetRule(false)` broadcasts explicitly. Notifier WebSocket lifecycle is not supported. |
+| Java | Build `org.attunedev:attune-sdk:0.2.3` from source or use an attached release JAR; imports under `io.attune` | Numeric rule targeting is the default when `.rule(rule)` is supplied; `.targetRule(false)` broadcasts explicitly. Supports notifier WebSocket lifecycle updates. |
 
-Python and JavaScript notifier clients use `ATTUNE_SENSOR_TRIGGER_TYPES` to subscribe to every trigger declared by the sensor, including trigger refs with no active rule in the startup snapshot. Pin and test the selected SDK revision or package release; the synchronized working-tree behavior may be newer than a published package.
+The notifier clients use `ATTUNE_SENSOR_TRIGGER_TYPES` to subscribe to every trigger declared by the sensor, including trigger refs with no active rule in the startup snapshot. Pin and test the selected SDK revision or package release; repository behavior may be newer than a published package.
 
-Verification snapshot (2026-08-11): Python is based on `93814eacffad22207768b2ab9368865a1b1008a1` plus uncommitted remediation and a regenerated client; all 91 tests and the sdist/wheel builds pass. JavaScript is based on `15773a5a3767213f5d1ac005219174d5e06f4681` plus uncommitted remediation and a regenerated client; all 61 tests, lint, build, package smoke, generated-client freshness, and npm audit checks pass. The Java working tree is based on `02755db2d62683bfff0c5ca19427d4a4f5a596ba` plus uncommitted remediation and has 31 passing tests, but still has no notifier WebSocket lifecycle support. These working trees are package-version aligned to SDK `0.3.0` for Attune/OpenAPI `0.3.0`; the base commits remain the verification anchors and do not contain the uncommitted remediation. Attune API-environment E2E checks remain a separate gate.
+Run each SDK's contract tests against the Attune API version you deploy. Package publication and API-environment E2E checks remain separate release gates.
 
 ## Live rule updates (WebSocket, not AMQP)
 

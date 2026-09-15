@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.6.3"
+    "version": "0.6.2"
   },
   "servers": [
     {
@@ -7998,16 +7998,6 @@
               "type": "integer",
               "format": "int64"
             }
-          },
-          {
-            "name": "include_secret_values",
-            "in": "query",
-            "description": "Include decrypted secret resolved parameter values. Requires enforcements:decrypt.",
-            "required": false,
-            "schema": {
-              "type": "boolean"
-            },
-            "example": false
           }
         ],
         "responses": {
@@ -8899,16 +8889,6 @@
               "type": "integer",
               "format": "int64"
             }
-          },
-          {
-            "name": "include_secret_values",
-            "in": "query",
-            "description": "Include decrypted secret parameter/result values. Requires executions:decrypt.",
-            "required": false,
-            "schema": {
-              "type": "boolean"
-            },
-            "example": false
           }
         ],
         "responses": {
@@ -12239,7 +12219,7 @@
         "tags": [
           "secrets"
         ],
-        "summary": "Get a single key by reference",
+        "summary": "Get a single key by reference (includes decrypted value)",
         "operationId": "get_key",
         "parameters": [
           {
@@ -12254,7 +12234,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Key details; encrypted values require decrypt permission",
+            "description": "Key details with decrypted value",
             "content": {
               "application/json": {
                 "schema": {
