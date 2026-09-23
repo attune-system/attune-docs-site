@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.7.0"
+    "version": "0.6.3"
   },
   "servers": [
     {
@@ -304,13 +304,6 @@
                         "required_worker_runtimes": {
                           "type": "object",
                           "description": "Additional worker runtime requirements keyed by runtime name/alias. Use \"*\" for any available version."
-                        },
-                        "retired_at": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "format": "date-time"
                         },
                         "runtime": {
                           "type": [
@@ -822,13 +815,6 @@
                           "type": "object",
                           "description": "Additional worker runtime requirements keyed by runtime name/alias. Use \"*\" for any available version."
                         },
-                        "retired_at": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "format": "date-time"
-                        },
                         "runtime": {
                           "type": [
                             "integer",
@@ -1120,13 +1106,6 @@
                         "required_worker_runtimes": {
                           "type": "object",
                           "description": "Additional worker runtime requirements keyed by runtime name/alias. Use \"*\" for any available version."
-                        },
-                        "retired_at": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "format": "date-time"
                         },
                         "runtime": {
                           "type": [
@@ -3970,7 +3949,7 @@
           "artifacts"
         ],
         "summary": "Stream the latest file-backed artifact version as Server-Sent Events.",
-        "description": "The endpoint:\n1. Streams committed immutable log segments when the version has an\n   object-segment log stream.\n2. Otherwise, waits for the allocated file and tails appended bytes.\n3. When no new bytes have appeared for several consecutive checks **and** the\n   linked execution (if any) has reached a terminal status, it sends a `done`\n   event and the stream ends.\n4. If the client disconnects the stream is cleaned up automatically.\n\n**Event types** (SSE `event:` field):\n- `content`  – full file content up to the current offset (sent once)\n- `append`   – incremental bytes appended since the last event\n- `waiting`  – file does not exist yet; sent periodically while waiting\n- `done`     – no more data expected; stream will close\n- `error`    – something went wrong; `data` contains a human-readable message",
+        "description": "The endpoint:\n1. Waits (up to ~30 s) for the file to appear on disk if it has been\n   allocated but not yet written by the worker.\n2. Once the file exists it sends the current content as an initial `content`\n   event, then tails the file every 500 ms, sending `append` events with new\n   bytes.\n3. When no new bytes have appeared for several consecutive checks **and** the\n   linked execution (if any) has reached a terminal status, it sends a `done`\n   event and the stream ends.\n4. If the client disconnects the stream is cleaned up automatically.\n\n**Event types** (SSE `event:` field):\n- `content`  – full file content up to the current offset (sent once)\n- `append`   – incremental bytes appended since the last event\n- `waiting`  – file does not exist yet; sent periodically while waiting\n- `done`     – no more data expected; stream will close\n- `error`    – something went wrong; `data` contains a human-readable message",
         "operationId": "stream_artifact",
         "parameters": [
           {
@@ -8836,7 +8815,7 @@
         "tags": [
           "inquiries"
         ],
-        "summary": "List inquiries created by a specific execution",
+        "summary": "List inquiries for a specific execution",
         "operationId": "list_inquiries_by_execution",
         "parameters": [
           {
@@ -8877,7 +8856,7 @@
         ],
         "responses": {
           "200": {
-            "description": "List of inquiries created by execution",
+            "description": "List of inquiries for execution",
             "content": {
               "application/json": {
                 "schema": {
@@ -9821,124 +9800,6 @@
                           "updated": {
                             "type": "string",
                             "format": "date-time"
-                          }
-                        }
-                      }
-                    },
-                    "message": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "description": "Optional message"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Execution is not visible to the caller"
-          },
-          "404": {
-            "description": "Execution not found"
-          }
-        },
-        "security": [
-          {
-            "bearer_auth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/executions/{id}/workflow-task-waits": {
-      "get": {
-        "tags": [
-          "executions"
-        ],
-        "summary": "List safe workflow task wait metadata for an execution.",
-        "operationId": "list_workflow_task_waits",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "Execution ID",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Workflow task wait metadata",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "description": "Standard API response wrapper",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "description": "Safe operational metadata for one workflow task wait.",
-                        "required": [
-                          "id",
-                          "task_name",
-                          "kind",
-                          "state",
-                          "created",
-                          "updated"
-                        ],
-                        "properties": {
-                          "created": {
-                            "type": "string",
-                            "format": "date-time"
-                          },
-                          "id": {
-                            "type": "integer",
-                            "format": "int64"
-                          },
-                          "kind": {
-                            "$ref": "#/components/schemas/WorkflowTaskWaitKind"
-                          },
-                          "resolved_at": {
-                            "type": [
-                              "string",
-                              "null"
-                            ],
-                            "format": "date-time"
-                          },
-                          "state": {
-                            "$ref": "#/components/schemas/WorkflowTaskWaitState"
-                          },
-                          "target_id": {
-                            "type": [
-                              "integer",
-                              "null"
-                            ],
-                            "format": "int64"
-                          },
-                          "task_name": {
-                            "type": "string"
-                          },
-                          "updated": {
-                            "type": "string",
-                            "format": "date-time"
-                          },
-                          "work_queue_ref": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
                           }
                         }
                       }
@@ -11384,317 +11245,6 @@
         ]
       }
     },
-    "/api/v1/identities/{integration_identity}/external-identity-mappings": {
-      "get": {
-        "tags": [
-          "external identity mappings"
-        ],
-        "operationId": "list_external_identity_mappings",
-        "parameters": [
-          {
-            "name": "integration_identity",
-            "in": "path",
-            "description": "Integration identity ID",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "description": "Page number (1-based)",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "minimum": 1
-            },
-            "example": 1
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "description": "Number of items per page",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "maximum": 100,
-              "minimum": 1
-            },
-            "example": 50
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Mappings",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PaginatedResponse_ExternalIdentityMappingResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Insufficient identity read permission"
-          },
-          "404": {
-            "description": "Integration identity not found"
-          }
-        },
-        "security": [
-          {
-            "bearer_auth": []
-          }
-        ]
-      },
-      "post": {
-        "tags": [
-          "external identity mappings"
-        ],
-        "operationId": "create_external_identity_mapping",
-        "parameters": [
-          {
-            "name": "integration_identity",
-            "in": "path",
-            "description": "Integration identity ID",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateExternalIdentityMappingRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Mapping created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponse_ExternalIdentityMappingResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Insufficient identity administration permission"
-          },
-          "404": {
-            "description": "Integration identity not found"
-          },
-          "409": {
-            "description": "Mapping already exists"
-          },
-          "422": {
-            "description": "Invalid mapping"
-          }
-        },
-        "security": [
-          {
-            "bearer_auth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/identities/{integration_identity}/external-identity-mappings/{mapping_id}": {
-      "get": {
-        "tags": [
-          "external identity mappings"
-        ],
-        "operationId": "get_external_identity_mapping",
-        "parameters": [
-          {
-            "name": "integration_identity",
-            "in": "path",
-            "description": "Integration identity ID",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "mapping_id",
-            "in": "path",
-            "description": "Mapping ID",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Mapping",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponse_ExternalIdentityMappingResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Insufficient identity read permission"
-          },
-          "404": {
-            "description": "Identity or mapping not found"
-          }
-        },
-        "security": [
-          {
-            "bearer_auth": []
-          }
-        ]
-      },
-      "put": {
-        "tags": [
-          "external identity mappings"
-        ],
-        "operationId": "update_external_identity_mapping",
-        "parameters": [
-          {
-            "name": "integration_identity",
-            "in": "path",
-            "description": "Integration identity ID",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "mapping_id",
-            "in": "path",
-            "description": "Mapping ID",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateExternalIdentityMappingRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Mapping updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponse_ExternalIdentityMappingResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Insufficient identity administration permission"
-          },
-          "404": {
-            "description": "Identity or mapping not found"
-          },
-          "409": {
-            "description": "Mapping already exists"
-          },
-          "422": {
-            "description": "Invalid mapping"
-          }
-        },
-        "security": [
-          {
-            "bearer_auth": []
-          }
-        ]
-      },
-      "delete": {
-        "tags": [
-          "external identity mappings"
-        ],
-        "operationId": "delete_external_identity_mapping",
-        "parameters": [
-          {
-            "name": "integration_identity",
-            "in": "path",
-            "description": "Integration identity ID",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "mapping_id",
-            "in": "path",
-            "description": "Mapping ID",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Mapping deleted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponse_SuccessResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Insufficient identity administration permission"
-          },
-          "404": {
-            "description": "Identity or mapping not found"
-          }
-        },
-        "security": [
-          {
-            "bearer_auth": []
-          }
-        ]
-      }
-    },
     "/api/v1/inquiries": {
       "get": {
         "tags": [
@@ -11721,9 +11271,9 @@
             "example": "pending"
           },
           {
-            "name": "created_by_execution",
+            "name": "execution",
             "in": "query",
-            "description": "Filter by creator execution ID",
+            "description": "Filter by execution ID",
             "required": false,
             "schema": {
               "oneOf": [
@@ -11753,32 +11303,6 @@
               ]
             },
             "example": 1
-          },
-          {
-            "name": "workflow_action_ref",
-            "in": "query",
-            "description": "Filter by the containing workflow action reference",
-            "required": false,
-            "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "example": "core.deploy_workflow"
-          },
-          {
-            "name": "workflow_pack_ref",
-            "in": "query",
-            "description": "Filter by the containing workflow pack reference",
-            "required": false,
-            "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "example": "core"
           },
           {
             "name": "offset",
@@ -11851,32 +11375,23 @@
         },
         "responses": {
           "201": {
-            "description": "Inquiry and one-shot response handle created",
+            "description": "Inquiry created successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiResponse_CreateInquiryResponse"
+                  "$ref": "#/components/schemas/ApiResponse_InquiryResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "Malformed request"
+            "description": "Invalid request"
           },
           "401": {
             "description": "Unauthorized"
           },
-          "403": {
-            "description": "Execution token or inquiries:create permission required"
-          },
           "404": {
             "description": "Execution not found"
-          },
-          "409": {
-            "description": "Idempotent creation fields differ"
-          },
-          "422": {
-            "description": "Inquiry request, schema, or options are invalid"
           },
           "500": {
             "description": "Internal server error"
@@ -11900,7 +11415,7 @@
           {
             "name": "status",
             "in": "path",
-            "description": "Inquiry status (pending, responded, timeout, cancelled)",
+            "description": "Inquiry status (pending, responded, timeout, canceled)",
             "required": true,
             "schema": {
               "type": "string"
@@ -12005,15 +11520,71 @@
             "bearer_auth": []
           }
         ]
-      }
-    },
-    "/api/v1/inquiries/{id}/cancel": {
-      "post": {
+      },
+      "put": {
         "tags": [
           "inquiries"
         ],
-        "summary": "Cancel an inquiry from its creator execution.",
-        "operationId": "cancel_inquiry",
+        "summary": "Update an existing inquiry",
+        "operationId": "update_inquiry",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Inquiry ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInquiryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Inquiry updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_InquiryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Inquiry not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "inquiries"
+        ],
+        "summary": "Delete an inquiry",
+        "operationId": "delete_inquiry",
         "parameters": [
           {
             "name": "id",
@@ -12028,11 +11599,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Inquiry cancelled",
+            "description": "Inquiry deleted successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiResponse_InquiryResponse"
+                  "$ref": "#/components/schemas/SuccessResponse"
                 }
               }
             }
@@ -12040,14 +11611,8 @@
           "401": {
             "description": "Unauthorized"
           },
-          "403": {
-            "description": "Only the creator execution can cancel the inquiry"
-          },
           "404": {
             "description": "Inquiry not found"
-          },
-          "409": {
-            "description": "Inquiry is no longer pending"
           },
           "500": {
             "description": "Internal server error"
@@ -12101,7 +11666,7 @@
             }
           },
           "400": {
-            "description": "Malformed request"
+            "description": "Invalid request or inquiry cannot be responded to"
           },
           "401": {
             "description": "Unauthorized"
@@ -12111,12 +11676,6 @@
           },
           "404": {
             "description": "Inquiry not found"
-          },
-          "409": {
-            "description": "Inquiry is no longer pending"
-          },
-          "422": {
-            "description": "Response does not conform to the inquiry schema"
           },
           "500": {
             "description": "Internal server error"
@@ -15267,13 +14826,6 @@
                           "description": "Unique reference identifier",
                           "example": "slack.incident_workflow"
                         },
-                        "retired_at": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "format": "date-time"
-                        },
                         "tags": {
                           "type": "array",
                           "items": {
@@ -15931,227 +15483,6 @@
           },
           "404": {
             "description": "No install records found for pack"
-          }
-        },
-        "security": [
-          {
-            "bearer_auth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/packs/{ref}/releases": {
-      "get": {
-        "tags": [
-          "packs"
-        ],
-        "operationId": "get_pack_releases",
-        "parameters": [
-          {
-            "name": "ref",
-            "in": "path",
-            "description": "Pack reference identifier",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Immutable pack release history",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "description": "Standard API response wrapper",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "description": "Public metadata for an immutable pack release.",
-                        "required": [
-                          "id",
-                          "version",
-                          "digest",
-                          "archive_size",
-                          "created",
-                          "is_active"
-                        ],
-                        "properties": {
-                          "archive_size": {
-                            "type": "integer",
-                            "format": "int64"
-                          },
-                          "created": {
-                            "type": "string",
-                            "format": "date-time"
-                          },
-                          "digest": {
-                            "type": "string"
-                          },
-                          "id": {
-                            "type": "integer",
-                            "format": "int64"
-                          },
-                          "inactive_since": {
-                            "type": [
-                              "string",
-                              "null"
-                            ],
-                            "format": "date-time"
-                          },
-                          "is_active": {
-                            "type": "boolean"
-                          },
-                          "version": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    },
-                    "message": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "description": "Optional message"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuthErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Pack not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer_auth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/packs/{ref}/retired-components": {
-      "get": {
-        "tags": [
-          "packs"
-        ],
-        "operationId": "get_retired_pack_components",
-        "parameters": [
-          {
-            "name": "ref",
-            "in": "path",
-            "description": "Pack reference identifier",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Retired pack-managed components",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "description": "Standard API response wrapper",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "description": "A component removed from the active projection of an installed pack.",
-                        "required": [
-                          "kind",
-                          "id",
-                          "retired_at"
-                        ],
-                        "properties": {
-                          "component_ref": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "id": {
-                            "type": "integer",
-                            "format": "int64"
-                          },
-                          "kind": {
-                            "type": "string"
-                          },
-                          "managed_release": {
-                            "type": [
-                              "integer",
-                              "null"
-                            ],
-                            "format": "int64"
-                          },
-                          "retired_at": {
-                            "type": "string",
-                            "format": "date-time"
-                          }
-                        }
-                      }
-                    },
-                    "message": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "description": "Optional message"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuthErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Pack not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
           }
         },
         "security": [
@@ -17088,13 +16419,6 @@
                         "ref": {
                           "type": "string"
                         },
-                        "retired_at": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "format": "date-time"
-                        },
                         "roles": {
                           "type": "array",
                           "items": {
@@ -17215,95 +16539,6 @@
           },
           "404": {
             "description": "Permission set not found"
-          }
-        },
-        "security": [
-          {
-            "bearer_auth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/platform/catalog": {
-      "get": {
-        "tags": [
-          "packs"
-        ],
-        "operationId": "get_platform_catalog",
-        "responses": {
-          "200": {
-            "description": "Platform catalog compatibility state",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "description": "Standard API response wrapper",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "required": [
-                        "compatibility_epoch",
-                        "revision",
-                        "expected_compatibility_epoch",
-                        "expected_revision",
-                        "status"
-                      ],
-                      "properties": {
-                        "compatibility_epoch": {
-                          "type": "integer",
-                          "format": "int32"
-                        },
-                        "expected_compatibility_epoch": {
-                          "type": "integer",
-                          "format": "int32"
-                        },
-                        "expected_revision": {
-                          "type": "integer",
-                          "format": "int32"
-                        },
-                        "revision": {
-                          "type": "integer",
-                          "format": "int32"
-                        },
-                        "status": {
-                          "$ref": "#/components/schemas/PlatformCatalogStatus"
-                        }
-                      }
-                    },
-                    "message": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "description": "Optional message"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuthErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
           }
         },
         "security": [
@@ -18241,56 +17476,6 @@
       }
     },
     "/api/v1/queues/{ref}/items/{item_id}": {
-      "get": {
-        "tags": [
-          "queues"
-        ],
-        "operationId": "get_queue_item",
-        "parameters": [
-          {
-            "name": "ref",
-            "in": "path",
-            "description": "Queue reference identifier",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "item_id",
-            "in": "path",
-            "description": "Queue item identifier",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Queue item detail",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponse_WorkQueueItemResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient permissions"
-          },
-          "404": {
-            "description": "Queue or queue item not found"
-          }
-        },
-        "security": [
-          {
-            "bearer_auth": []
-          }
-        ]
-      },
       "put": {
         "tags": [
           "queues"
@@ -20912,13 +20097,6 @@
                           "description": "Unique reference identifier",
                           "example": "slack.incident_workflow"
                         },
-                        "retired_at": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "format": "date-time"
-                        },
                         "tags": {
                           "type": "array",
                           "items": {
@@ -21079,13 +20257,6 @@
                           "type": "string",
                           "description": "Unique reference identifier",
                           "example": "slack.incident_workflow"
-                        },
-                        "retired_at": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "format": "date-time"
                         },
                         "tags": {
                           "type": "array",
@@ -21249,13 +20420,6 @@
                           "type": "string",
                           "description": "Unique reference identifier",
                           "example": "slack.incident_workflow"
-                        },
-                        "retired_at": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "format": "date-time"
                         },
                         "tags": {
                           "type": "array",
@@ -21462,13 +20626,6 @@
                           "type": "string",
                           "description": "Unique reference identifier",
                           "example": "slack.incident_workflow"
-                        },
-                        "retired_at": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "format": "date-time"
                         },
                         "tags": {
                           "type": "array",
@@ -22654,57 +21811,19 @@
         "tags": [
           "health"
         ],
-        "summary": "Platform health check endpoint.",
+        "summary": "Basic health check endpoint",
+        "description": "Returns 200 OK if the service is running",
         "operationId": "health",
         "responses": {
           "200": {
-            "description": "Database and exact platform catalog are ready",
+            "description": "Service is healthy",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Platform is not ready",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/health/content": {
-      "get": {
-        "tags": [
-          "health"
-        ],
-        "summary": "Transitional content and coarse host-capability health.",
-        "description": "Required-pack locks and candidate evidence replace this contract in issue #75.",
-        "operationId": "content",
-        "responses": {
-          "200": {
-            "description": "Core content and coarse host capabilities are available",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Content or coarse host capabilities are absent",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
+                },
+                "example": {
+                  "status": "ok"
                 }
               }
             }
@@ -22780,15 +21899,6 @@
   },
   "components": {
     "schemas": {
-      "AbsentMetadataPolicy": {
-        "type": "string",
-        "description": "How an installation handles pack-managed metadata omitted by the new release.",
-        "enum": [
-          "remove",
-          "disable",
-          "retain"
-        ]
-      },
       "ActionReferenceVisibility": {
         "type": "string",
         "enum": [
@@ -22961,13 +22071,6 @@
           "required_worker_runtimes": {
             "type": "object",
             "description": "Additional worker runtime requirements keyed by runtime name/alias. Use \"*\" for any available version."
-          },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
           },
           "runtime": {
             "type": [
@@ -23229,13 +22332,6 @@
           "required_worker_runtimes": {
             "type": "object",
             "description": "Additional worker runtime requirements keyed by runtime name/alias. Use \"*\" for any available version."
-          },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
           },
           "runtime": {
             "type": [
@@ -23661,13 +22757,6 @@
               "required_worker_runtimes": {
                 "type": "object",
                 "description": "Additional worker runtime requirements keyed by runtime name/alias. Use \"*\" for any available version."
-              },
-              "retired_at": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "format": "date-time"
               },
               "runtime": {
                 "type": [
@@ -24183,41 +23272,6 @@
           }
         }
       },
-      "ApiResponse_CreateInquiryResponse": {
-        "type": "object",
-        "description": "Standard API response wrapper",
-        "required": [
-          "data"
-        ],
-        "properties": {
-          "data": {
-            "type": "object",
-            "description": "Creation result containing the inquiry and one opaque handle per response option.",
-            "required": [
-              "inquiry",
-              "response_options"
-            ],
-            "properties": {
-              "inquiry": {
-                "$ref": "#/components/schemas/InquiryResponse"
-              },
-              "response_options": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/InquiryResponseOptionHandle"
-                }
-              }
-            }
-          },
-          "message": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Optional message"
-          }
-        }
-      },
       "ApiResponse_CurrentUserResponse": {
         "type": "object",
         "description": "Standard API response wrapper",
@@ -24377,13 +23431,6 @@
               },
               "ref": {
                 "type": "string"
-              },
-              "retired_at": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "format": "date-time"
               },
               "revision": {
                 "type": "integer",
@@ -24952,77 +23999,6 @@
           }
         }
       },
-      "ApiResponse_ExternalIdentityMappingResponse": {
-        "type": "object",
-        "description": "Standard API response wrapper",
-        "required": [
-          "data"
-        ],
-        "properties": {
-          "data": {
-            "type": "object",
-            "required": [
-              "id",
-              "integration_identity",
-              "mapped_identity",
-              "provider",
-              "tenant",
-              "subject_kind",
-              "external_subject",
-              "created",
-              "updated"
-            ],
-            "properties": {
-              "created": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "created_by": {
-                "type": [
-                  "integer",
-                  "null"
-                ],
-                "format": "int64"
-              },
-              "external_subject": {
-                "type": "string"
-              },
-              "id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "integration_identity": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "mapped_identity": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "provider": {
-                "type": "string"
-              },
-              "subject_kind": {
-                "type": "string"
-              },
-              "tenant": {
-                "type": "string"
-              },
-              "updated": {
-                "type": "string",
-                "format": "date-time"
-              }
-            }
-          },
-          "message": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Optional message"
-          }
-        }
-      },
       "ApiResponse_GetPackDependenciesResponse": {
         "type": "object",
         "description": "Standard API response wrapper",
@@ -25162,10 +24138,9 @@
             "description": "Full inquiry response with all details",
             "required": [
               "id",
-              "created_by_execution",
+              "execution",
               "prompt",
               "response_schema",
-              "response_options",
               "status",
               "response",
               "created",
@@ -25183,39 +24158,15 @@
                   }
                 ]
               },
-              "assigned_to_display_name": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "assigned_to_login": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
               "created": {
                 "type": "string",
                 "format": "date-time",
                 "description": "Creation timestamp",
                 "example": "2024-01-13T10:30:00Z"
               },
-              "created_by_action_ref": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "created_by_execution": {
+              "execution": {
                 "$ref": "#/components/schemas/i64",
-                "description": "Execution ID that created this inquiry"
-              },
-              "created_by_pack_ref": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "description": "Execution ID this inquiry belongs to"
               },
               "id": {
                 "$ref": "#/components/schemas/i64",
@@ -25226,12 +24177,6 @@
                 "description": "Prompt text displayed to the user",
                 "example": "Approve deployment to production?"
               },
-              "purpose": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
               "responded_at": {
                 "type": [
                   "string",
@@ -25241,28 +24186,6 @@
                 "description": "When the inquiry was responded to",
                 "example": "2024-01-13T10:45:00Z"
               },
-              "responded_by": {
-                "oneOf": [
-                  {
-                    "type": "null"
-                  },
-                  {
-                    "$ref": "#/components/schemas/i64"
-                  }
-                ]
-              },
-              "responded_by_display_name": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "responded_by_login": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
               "response": {
                 "type": [
                   "object",
@@ -25270,19 +24193,12 @@
                 ],
                 "description": "Response data provided by the user"
               },
-              "response_options": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/InquiryResponseOption"
-                },
-                "description": "Fixed responses that provider controls may select."
-              },
               "response_schema": {
                 "type": [
                   "object",
                   "null"
                 ],
-                "description": "Attune flat schema for expected response fields"
+                "description": "JSON schema for expected response"
               },
               "status": {
                 "$ref": "#/components/schemas/InquiryStatus",
@@ -25302,45 +24218,6 @@
                 "format": "date-time",
                 "description": "Last update timestamp",
                 "example": "2024-01-13T10:45:00Z"
-              },
-              "workflow_action_ref": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "workflow_execution": {
-                "oneOf": [
-                  {
-                    "type": "null"
-                  },
-                  {
-                    "$ref": "#/components/schemas/i64"
-                  }
-                ]
-              },
-              "workflow_pack_ref": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "workflow_root_execution": {
-                "oneOf": [
-                  {
-                    "type": "null"
-                  },
-                  {
-                    "$ref": "#/components/schemas/i64",
-                    "description": "Root execution ID for the containing workflow"
-                  }
-                ]
-              },
-              "workflow_task_name": {
-                "type": [
-                  "string",
-                  "null"
-                ]
               }
             }
           },
@@ -25592,14 +24469,9 @@
               "pack_version",
               "status",
               "trigger_reason",
-              "absent_metadata_policy",
               "started_at"
             ],
             "properties": {
-              "absent_metadata_policy": {
-                "$ref": "#/components/schemas/AbsentMetadataPolicy",
-                "description": "Policy applied to metadata omitted by this release."
-              },
               "error_message": {
                 "type": [
                   "string",
@@ -25885,53 +24757,6 @@
           }
         }
       },
-      "ApiResponse_PlatformCatalogStateResponse": {
-        "type": "object",
-        "description": "Standard API response wrapper",
-        "required": [
-          "data"
-        ],
-        "properties": {
-          "data": {
-            "type": "object",
-            "required": [
-              "compatibility_epoch",
-              "revision",
-              "expected_compatibility_epoch",
-              "expected_revision",
-              "status"
-            ],
-            "properties": {
-              "compatibility_epoch": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "expected_compatibility_epoch": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "expected_revision": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "revision": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "status": {
-                "$ref": "#/components/schemas/PlatformCatalogStatus"
-              }
-            }
-          },
-          "message": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Optional message"
-          }
-        }
-      },
       "ApiResponse_PolicyResponse": {
         "type": "object",
         "description": "Standard API response wrapper",
@@ -26006,13 +24831,6 @@
               },
               "ref": {
                 "type": "string"
-              },
-              "retired_at": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "format": "date-time"
               },
               "scope": {
                 "$ref": "#/components/schemas/PolicyScopeResponse"
@@ -26393,13 +25211,6 @@
                 "description": "Unique reference identifier",
                 "example": "slack.notify_on_error"
               },
-              "retired_at": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "format": "date-time"
-              },
               "sensor_worker_affinity": {
                 "type": "object"
               },
@@ -26527,13 +25338,6 @@
               "ref": {
                 "type": "string",
                 "example": "core.python"
-              },
-              "retired_at": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "format": "date-time"
               },
               "updated": {
                 "type": "string",
@@ -26680,13 +25484,6 @@
                 "type": "string",
                 "description": "Unique reference identifier",
                 "example": "monitoring.cpu_sensor"
-              },
-              "retired_at": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "format": "date-time"
               },
               "runtime": {
                 "type": "integer",
@@ -27036,13 +25833,6 @@
                 "$ref": "#/components/schemas/ActionReferenceVisibility",
                 "description": "Pack-level visibility for rule subscriptions."
               },
-              "retired_at": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "format": "date-time"
-              },
               "sensor": {
                 "type": [
                   "integer",
@@ -27307,13 +26097,6 @@
                 "ref": {
                   "type": "string"
                 },
-                "retired_at": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "format": "date-time"
-                },
                 "revision": {
                   "type": "integer",
                   "format": "int32"
@@ -27336,121 +26119,6 @@
                 },
                 "visibility": {
                   "$ref": "#/components/schemas/DashboardVisibility"
-                }
-              }
-            }
-          },
-          "message": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Optional message"
-          }
-        }
-      },
-      "ApiResponse_Vec_PackReleaseResponse": {
-        "type": "object",
-        "description": "Standard API response wrapper",
-        "required": [
-          "data"
-        ],
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "description": "Public metadata for an immutable pack release.",
-              "required": [
-                "id",
-                "version",
-                "digest",
-                "archive_size",
-                "created",
-                "is_active"
-              ],
-              "properties": {
-                "archive_size": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "created": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "digest": {
-                  "type": "string"
-                },
-                "id": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "inactive_since": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "format": "date-time"
-                },
-                "is_active": {
-                  "type": "boolean"
-                },
-                "version": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "message": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Optional message"
-          }
-        }
-      },
-      "ApiResponse_Vec_RetiredPackComponentResponse": {
-        "type": "object",
-        "description": "Standard API response wrapper",
-        "required": [
-          "data"
-        ],
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "description": "A component removed from the active projection of an installed pack.",
-              "required": [
-                "kind",
-                "id",
-                "retired_at"
-              ],
-              "properties": {
-                "component_ref": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "id": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "kind": {
-                  "type": "string"
-                },
-                "managed_release": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ],
-                  "format": "int64"
-                },
-                "retired_at": {
-                  "type": "string",
-                  "format": "date-time"
                 }
               }
             }
@@ -27545,80 +26213,6 @@
                 "updated": {
                   "type": "string",
                   "format": "date-time"
-                }
-              }
-            }
-          },
-          "message": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Optional message"
-          }
-        }
-      },
-      "ApiResponse_Vec_WorkflowTaskWaitResponse": {
-        "type": "object",
-        "description": "Standard API response wrapper",
-        "required": [
-          "data"
-        ],
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "description": "Safe operational metadata for one workflow task wait.",
-              "required": [
-                "id",
-                "task_name",
-                "kind",
-                "state",
-                "created",
-                "updated"
-              ],
-              "properties": {
-                "created": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "id": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "kind": {
-                  "$ref": "#/components/schemas/WorkflowTaskWaitKind"
-                },
-                "resolved_at": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "format": "date-time"
-                },
-                "state": {
-                  "$ref": "#/components/schemas/WorkflowTaskWaitState"
-                },
-                "target_id": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ],
-                  "format": "int64"
-                },
-                "task_name": {
-                  "type": "string"
-                },
-                "updated": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "work_queue_ref": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
                 }
               }
             }
@@ -27990,13 +26584,6 @@
                   }
                 ]
               },
-              "retired_at": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "format": "date-time"
-              },
               "trace_tag_template": {
                 "type": [
                   "string",
@@ -28106,13 +26693,6 @@
                 "type": "string",
                 "description": "Unique reference identifier",
                 "example": "slack.incident_workflow"
-              },
-              "retired_at": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "format": "date-time"
               },
               "tags": {
                 "type": "array",
@@ -29623,7 +28203,6 @@
           "max_retained_generations",
           "max_staging_generations",
           "tombstoned",
-          "retired_at",
           "created",
           "updated",
           "cache_not_populated",
@@ -29729,13 +28308,6 @@
             ],
             "format": "int64",
             "description": "Active generation record count, when populated."
-          },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
           },
           "size_bytes": {
             "type": [
@@ -30777,35 +29349,6 @@
           }
         }
       },
-      "CreateExternalIdentityMappingRequest": {
-        "type": "object",
-        "required": [
-          "mapped_identity",
-          "provider",
-          "tenant",
-          "subject_kind",
-          "external_subject"
-        ],
-        "properties": {
-          "external_subject": {
-            "type": "string"
-          },
-          "mapped_identity": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "provider": {
-            "type": "string"
-          },
-          "subject_kind": {
-            "type": "string"
-          },
-          "tenant": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
       "CreateFileVersionRequest": {
         "type": "object",
         "description": "Request DTO for creating a new file-backed artifact version.\nNo file content is included — the caller writes the file directly to\n`$ATTUNE_ARTIFACTS_DIR/{file_path}` after receiving the response.",
@@ -30884,9 +29427,9 @@
         "type": "object",
         "description": "Request to create a new inquiry",
         "required": [
-          "purpose",
+          "execution",
           "prompt",
-          "response_options"
+          "response_schema"
         ],
         "properties": {
           "assigned_to": {
@@ -30900,57 +29443,27 @@
               }
             ]
           },
+          "execution": {
+            "$ref": "#/components/schemas/i64",
+            "description": "Execution ID this inquiry belongs to"
+          },
           "prompt": {
             "type": "string",
             "description": "Prompt text to display to the user",
             "example": "Approve deployment to production?"
           },
-          "purpose": {
-            "type": "string",
-            "description": "Stable purpose used to make creation idempotent within this workflow task attempt.",
-            "example": "approval"
-          },
-          "response_options": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/InquiryResponseOption"
-            },
-            "description": "Fixed response choices rendered by provider actions."
-          },
           "response_schema": {
-            "type": [
-              "object",
-              "null"
-            ],
+            "type": "object",
             "description": "Optional schema for the expected response format (flat format with inline required/secret)"
           },
-          "timeout_seconds": {
+          "timeout_at": {
             "type": [
-              "integer",
+              "string",
               "null"
             ],
-            "format": "int64",
-            "description": "Optional relative timeout in seconds.",
-            "example": 3600
-          }
-        }
-      },
-      "CreateInquiryResponse": {
-        "type": "object",
-        "description": "Creation result containing the inquiry and one opaque handle per response option.",
-        "required": [
-          "inquiry",
-          "response_options"
-        ],
-        "properties": {
-          "inquiry": {
-            "$ref": "#/components/schemas/InquiryResponse"
-          },
-          "response_options": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/InquiryResponseOptionHandle"
-            }
+            "format": "date-time",
+            "description": "Optional timeout timestamp (when inquiry expires)",
+            "example": "2024-01-13T11:30:00Z"
           }
         }
       },
@@ -32163,13 +30676,6 @@
           "ref": {
             "type": "string"
           },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
           "revision": {
             "type": "integer",
             "format": "int32"
@@ -32257,13 +30763,6 @@
           },
           "ref": {
             "type": "string"
-          },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
           },
           "revision": {
             "type": "integer",
@@ -33529,61 +32028,6 @@
           }
         }
       },
-      "ExternalIdentityMappingResponse": {
-        "type": "object",
-        "required": [
-          "id",
-          "integration_identity",
-          "mapped_identity",
-          "provider",
-          "tenant",
-          "subject_kind",
-          "external_subject",
-          "created",
-          "updated"
-        ],
-        "properties": {
-          "created": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "created_by": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64"
-          },
-          "external_subject": {
-            "type": "string"
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "integration_identity": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "mapped_identity": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "provider": {
-            "type": "string"
-          },
-          "subject_kind": {
-            "type": "string"
-          },
-          "tenant": {
-            "type": "string"
-          },
-          "updated": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
       "FailedEnvironment": {
         "type": "object",
         "description": "Failed environment build",
@@ -34018,10 +32462,9 @@
         "description": "Full inquiry response with all details",
         "required": [
           "id",
-          "created_by_execution",
+          "execution",
           "prompt",
           "response_schema",
-          "response_options",
           "status",
           "response",
           "created",
@@ -34039,39 +32482,15 @@
               }
             ]
           },
-          "assigned_to_display_name": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "assigned_to_login": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
           "created": {
             "type": "string",
             "format": "date-time",
             "description": "Creation timestamp",
             "example": "2024-01-13T10:30:00Z"
           },
-          "created_by_action_ref": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "created_by_execution": {
+          "execution": {
             "$ref": "#/components/schemas/i64",
-            "description": "Execution ID that created this inquiry"
-          },
-          "created_by_pack_ref": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "description": "Execution ID this inquiry belongs to"
           },
           "id": {
             "$ref": "#/components/schemas/i64",
@@ -34082,12 +32501,6 @@
             "description": "Prompt text displayed to the user",
             "example": "Approve deployment to production?"
           },
-          "purpose": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
           "responded_at": {
             "type": [
               "string",
@@ -34097,28 +32510,6 @@
             "description": "When the inquiry was responded to",
             "example": "2024-01-13T10:45:00Z"
           },
-          "responded_by": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/i64"
-              }
-            ]
-          },
-          "responded_by_display_name": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "responded_by_login": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
           "response": {
             "type": [
               "object",
@@ -34126,19 +32517,12 @@
             ],
             "description": "Response data provided by the user"
           },
-          "response_options": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/InquiryResponseOption"
-            },
-            "description": "Fixed responses that provider controls may select."
-          },
           "response_schema": {
             "type": [
               "object",
               "null"
             ],
-            "description": "Attune flat schema for expected response fields"
+            "description": "JSON schema for expected response"
           },
           "status": {
             "$ref": "#/components/schemas/InquiryStatus",
@@ -34158,106 +32542,8 @@
             "format": "date-time",
             "description": "Last update timestamp",
             "example": "2024-01-13T10:45:00Z"
-          },
-          "workflow_action_ref": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "workflow_execution": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/i64"
-              }
-            ]
-          },
-          "workflow_pack_ref": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "workflow_root_execution": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/i64",
-                "description": "Root execution ID for the containing workflow"
-              }
-            ]
-          },
-          "workflow_task_name": {
-            "type": [
-              "string",
-              "null"
-            ]
           }
         }
-      },
-      "InquiryResponseOption": {
-        "type": "object",
-        "required": [
-          "ref",
-          "label",
-          "style",
-          "response"
-        ],
-        "properties": {
-          "label": {
-            "type": "string"
-          },
-          "ref": {
-            "type": "string"
-          },
-          "response": {
-            "type": "object"
-          },
-          "style": {
-            "$ref": "#/components/schemas/InquiryResponseOptionStyle"
-          }
-        },
-        "additionalProperties": false
-      },
-      "InquiryResponseOptionHandle": {
-        "type": "object",
-        "description": "Provider rendering metadata for one fixed response option.",
-        "required": [
-          "ref",
-          "label",
-          "style",
-          "response_handle"
-        ],
-        "properties": {
-          "label": {
-            "type": "string"
-          },
-          "ref": {
-            "type": "string"
-          },
-          "response_handle": {
-            "type": "string",
-            "example": "attune_irh_REDACTED",
-            "maxLength": 96,
-            "minLength": 12
-          },
-          "style": {
-            "$ref": "#/components/schemas/InquiryResponseOptionStyle"
-          }
-        }
-      },
-      "InquiryResponseOptionStyle": {
-        "type": "string",
-        "enum": [
-          "default",
-          "positive",
-          "destructive"
-        ]
       },
       "InquiryStatus": {
         "type": "string",
@@ -34273,7 +32559,7 @@
         "description": "Summary inquiry response for list views",
         "required": [
           "id",
-          "created_by_execution",
+          "execution",
           "prompt",
           "status",
           "has_response",
@@ -34291,39 +32577,15 @@
               }
             ]
           },
-          "assigned_to_display_name": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "assigned_to_login": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
           "created": {
             "type": "string",
             "format": "date-time",
             "description": "Creation timestamp",
             "example": "2024-01-13T10:30:00Z"
           },
-          "created_by_action_ref": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "created_by_execution": {
+          "execution": {
             "$ref": "#/components/schemas/i64",
-            "description": "Execution ID that created this inquiry"
-          },
-          "created_by_pack_ref": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "description": "Execution ID"
           },
           "has_response": {
             "type": "boolean",
@@ -34351,44 +32613,6 @@
             "format": "date-time",
             "description": "Timeout timestamp",
             "example": "2024-01-13T11:30:00Z"
-          },
-          "workflow_action_ref": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "workflow_execution": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/i64"
-              }
-            ]
-          },
-          "workflow_pack_ref": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "workflow_root_execution": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/i64"
-              }
-            ]
-          },
-          "workflow_task_name": {
-            "type": [
-              "string",
-              "null"
-            ]
           }
         }
       },
@@ -34399,10 +32623,6 @@
           "source"
         ],
         "properties": {
-          "absent_metadata_policy": {
-            "$ref": "#/components/schemas/AbsentMetadataPolicy",
-            "description": "How to handle pack-managed metadata omitted by this release."
-          },
           "force": {
             "type": "boolean",
             "description": "Replace an existing pack with the same ref",
@@ -35527,14 +33747,9 @@
           "pack_version",
           "status",
           "trigger_reason",
-          "absent_metadata_policy",
           "started_at"
         ],
         "properties": {
-          "absent_metadata_policy": {
-            "$ref": "#/components/schemas/AbsentMetadataPolicy",
-            "description": "Policy applied to metadata omitted by this release."
-          },
           "error_message": {
             "type": [
               "string",
@@ -35653,48 +33868,6 @@
             "format": "int32"
           },
           "url": {
-            "type": "string"
-          }
-        }
-      },
-      "PackReleaseResponse": {
-        "type": "object",
-        "description": "Public metadata for an immutable pack release.",
-        "required": [
-          "id",
-          "version",
-          "digest",
-          "archive_size",
-          "created",
-          "is_active"
-        ],
-        "properties": {
-          "archive_size": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "created": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "digest": {
-            "type": "string"
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "inactive_since": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
-          "is_active": {
-            "type": "boolean"
-          },
-          "version": {
             "type": "string"
           }
         }
@@ -36134,12 +34307,6 @@
           "pack"
         ],
         "properties": {
-          "absent_metadata_policy": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
           "force": {
             "type": [
               "string",
@@ -36460,13 +34627,6 @@
                 "required_worker_runtimes": {
                   "type": "object",
                   "description": "Additional worker runtime requirements keyed by runtime name/alias. Use \"*\" for any available version."
-                },
-                "retired_at": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "format": "date-time"
                 },
                 "runtime": {
                   "type": [
@@ -37070,79 +35230,6 @@
           }
         }
       },
-      "PaginatedResponse_ExternalIdentityMappingResponse": {
-        "type": "object",
-        "description": "Paginated response wrapper",
-        "required": [
-          "items",
-          "pagination"
-        ],
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "id",
-                "integration_identity",
-                "mapped_identity",
-                "provider",
-                "tenant",
-                "subject_kind",
-                "external_subject",
-                "created",
-                "updated"
-              ],
-              "properties": {
-                "created": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "created_by": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ],
-                  "format": "int64"
-                },
-                "external_subject": {
-                  "type": "string"
-                },
-                "id": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "integration_identity": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "mapped_identity": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "provider": {
-                  "type": "string"
-                },
-                "subject_kind": {
-                  "type": "string"
-                },
-                "tenant": {
-                  "type": "string"
-                },
-                "updated": {
-                  "type": "string",
-                  "format": "date-time"
-                }
-              }
-            },
-            "description": "The page items"
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationMeta",
-            "description": "Pagination metadata"
-          }
-        }
-      },
       "PaginatedResponse_HistoryRecordResponse": {
         "type": "object",
         "description": "Paginated response wrapper",
@@ -37289,7 +35376,7 @@
               "description": "Summary inquiry response for list views",
               "required": [
                 "id",
-                "created_by_execution",
+                "execution",
                 "prompt",
                 "status",
                 "has_response",
@@ -37307,39 +35394,15 @@
                     }
                   ]
                 },
-                "assigned_to_display_name": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "assigned_to_login": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
                 "created": {
                   "type": "string",
                   "format": "date-time",
                   "description": "Creation timestamp",
                   "example": "2024-01-13T10:30:00Z"
                 },
-                "created_by_action_ref": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "created_by_execution": {
+                "execution": {
                   "$ref": "#/components/schemas/i64",
-                  "description": "Execution ID that created this inquiry"
-                },
-                "created_by_pack_ref": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "description": "Execution ID"
                 },
                 "has_response": {
                   "type": "boolean",
@@ -37367,44 +35430,6 @@
                   "format": "date-time",
                   "description": "Timeout timestamp",
                   "example": "2024-01-13T11:30:00Z"
-                },
-                "workflow_action_ref": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "workflow_execution": {
-                  "oneOf": [
-                    {
-                      "type": "null"
-                    },
-                    {
-                      "$ref": "#/components/schemas/i64"
-                    }
-                  ]
-                },
-                "workflow_pack_ref": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "workflow_root_execution": {
-                  "oneOf": [
-                    {
-                      "type": "null"
-                    },
-                    {
-                      "$ref": "#/components/schemas/i64"
-                    }
-                  ]
-                },
-                "workflow_task_name": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
                 }
               }
             },
@@ -37745,13 +35770,6 @@
                 "ref": {
                   "type": "string"
                 },
-                "retired_at": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "format": "date-time"
-                },
                 "scope": {
                   "$ref": "#/components/schemas/PolicyScopeResponse"
                 },
@@ -37867,13 +35885,6 @@
                   "description": "Unique reference identifier",
                   "example": "slack.notify_on_error"
                 },
-                "retired_at": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "format": "date-time"
-                },
                 "sensor_worker_affinity": {
                   "type": "object"
                 },
@@ -37971,13 +35982,6 @@
                 "ref": {
                   "type": "string",
                   "example": "core.python"
-                },
-                "retired_at": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "format": "date-time"
                 },
                 "updated": {
                   "type": "string",
@@ -38099,13 +36103,6 @@
                   "description": "Unique reference identifier",
                   "example": "monitoring.cpu_sensor"
                 },
-                "retired_at": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "format": "date-time"
-                },
                 "updated": {
                   "type": "string",
                   "format": "date-time",
@@ -38203,13 +36200,6 @@
                 "reference_visibility": {
                   "$ref": "#/components/schemas/ActionReferenceVisibility",
                   "description": "Pack-level visibility for rule subscriptions."
-                },
-                "retired_at": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "format": "date-time"
                 },
                 "updated": {
                   "type": "string",
@@ -38479,13 +36469,6 @@
                 "reference_visibility": {
                   "$ref": "#/components/schemas/ActionReferenceVisibility"
                 },
-                "retired_at": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "format": "date-time"
-                },
                 "trace_tag_template": {
                   "type": [
                     "string",
@@ -38711,13 +36694,6 @@
                   "description": "Unique reference identifier",
                   "example": "slack.incident_workflow"
                 },
-                "retired_at": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "format": "date-time"
-                },
                 "tags": {
                   "type": "array",
                   "items": {
@@ -38907,13 +36883,6 @@
           "ref": {
             "type": "string"
           },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
           "roles": {
             "type": "array",
             "items": {
@@ -38921,46 +36890,6 @@
             }
           }
         }
-      },
-      "PlatformCatalogStateResponse": {
-        "type": "object",
-        "required": [
-          "compatibility_epoch",
-          "revision",
-          "expected_compatibility_epoch",
-          "expected_revision",
-          "status"
-        ],
-        "properties": {
-          "compatibility_epoch": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "expected_compatibility_epoch": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "expected_revision": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "revision": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "status": {
-            "$ref": "#/components/schemas/PlatformCatalogStatus"
-          }
-        }
-      },
-      "PlatformCatalogStatus": {
-        "type": "string",
-        "description": "Compatibility between the database catalog and this API build.",
-        "enum": [
-          "current",
-          "upgrade_required",
-          "incompatible"
-        ]
       },
       "PolicyMethod": {
         "type": "string",
@@ -39036,13 +36965,6 @@
           },
           "ref": {
             "type": "string"
-          },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
           },
           "scope": {
             "$ref": "#/components/schemas/PolicyScopeResponse"
@@ -39200,13 +37122,6 @@
           },
           "ref": {
             "type": "string"
-          },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
           },
           "scope": {
             "$ref": "#/components/schemas/PolicyScopeResponse"
@@ -39628,10 +37543,6 @@
           "path"
         ],
         "properties": {
-          "absent_metadata_policy": {
-            "$ref": "#/components/schemas/AbsentMetadataPolicy",
-            "description": "How to handle pack-managed metadata omitted by this release."
-          },
           "force": {
             "type": "boolean",
             "description": "Force registration even if tests fail",
@@ -39656,10 +37567,6 @@
           "pack_paths"
         ],
         "properties": {
-          "absent_metadata_policy": {
-            "$ref": "#/components/schemas/AbsentMetadataPolicy",
-            "description": "How to handle pack-managed metadata omitted by each release."
-          },
           "force": {
             "type": "boolean",
             "description": "Force registration (replace if exists)",
@@ -39998,41 +37905,6 @@
           }
         }
       },
-      "RetiredPackComponentResponse": {
-        "type": "object",
-        "description": "A component removed from the active projection of an installed pack.",
-        "required": [
-          "kind",
-          "id",
-          "retired_at"
-        ],
-        "properties": {
-          "component_ref": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "kind": {
-            "type": "string"
-          },
-          "managed_release": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64"
-          },
-          "retired_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
       "RevokeIntegrationTokenRequest": {
         "type": "object",
         "properties": {
@@ -40162,13 +38034,6 @@
             "description": "Unique reference identifier",
             "example": "slack.notify_on_error"
           },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
           "sensor_worker_affinity": {
             "type": "object"
           },
@@ -40296,13 +38161,6 @@
             "type": "string",
             "description": "Unique reference identifier",
             "example": "slack.notify_on_error"
-          },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
           },
           "sensor_worker_affinity": {
             "type": "object"
@@ -40442,13 +38300,6 @@
             "type": "string",
             "example": "core.python"
           },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
           "updated": {
             "type": "string",
             "format": "date-time",
@@ -40498,13 +38349,6 @@
           "ref": {
             "type": "string",
             "example": "core.python"
-          },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
           },
           "updated": {
             "type": "string",
@@ -40818,13 +38662,6 @@
             "description": "Unique reference identifier",
             "example": "monitoring.cpu_sensor"
           },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
           "runtime": {
             "type": "integer",
             "format": "int64",
@@ -40959,13 +38796,6 @@
             "type": "string",
             "description": "Unique reference identifier",
             "example": "monitoring.cpu_sensor"
-          },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
           },
           "updated": {
             "type": "string",
@@ -41581,13 +39411,6 @@
             "$ref": "#/components/schemas/ActionReferenceVisibility",
             "description": "Pack-level visibility for rule subscriptions."
           },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
           "sensor": {
             "type": [
               "integer",
@@ -41733,13 +39556,6 @@
           "reference_visibility": {
             "$ref": "#/components/schemas/ActionReferenceVisibility",
             "description": "Pack-level visibility for rule subscriptions."
-          },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
           },
           "updated": {
             "type": "string",
@@ -42218,35 +40034,6 @@
         },
         "additionalProperties": false
       },
-      "UpdateExternalIdentityMappingRequest": {
-        "type": "object",
-        "required": [
-          "mapped_identity",
-          "provider",
-          "tenant",
-          "subject_kind",
-          "external_subject"
-        ],
-        "properties": {
-          "external_subject": {
-            "type": "string"
-          },
-          "mapped_identity": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "provider": {
-            "type": "string"
-          },
-          "subject_kind": {
-            "type": "string"
-          },
-          "tenant": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
       "UpdateIdentityRequest": {
         "type": "object",
         "properties": {
@@ -42276,6 +40063,44 @@
             "type": [
               "string",
               "null"
+            ]
+          }
+        }
+      },
+      "UpdateInquiryRequest": {
+        "type": "object",
+        "description": "Request to update an inquiry",
+        "required": [
+          "response"
+        ],
+        "properties": {
+          "assigned_to": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/i64",
+                "description": "Update the assigned_to identity"
+              }
+            ]
+          },
+          "response": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Update the response data"
+          },
+          "status": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/InquiryStatus",
+                "description": "Update the inquiry status"
+              }
             ]
           }
         }
@@ -43701,13 +41526,6 @@
               }
             ]
           },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
           "trace_tag_template": {
             "type": [
               "string",
@@ -43799,13 +41617,6 @@
           },
           "reference_visibility": {
             "$ref": "#/components/schemas/ActionReferenceVisibility"
-          },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
           },
           "trace_tag_template": {
             "type": [
@@ -44304,13 +42115,6 @@
             "description": "Unique reference identifier",
             "example": "slack.incident_workflow"
           },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
           "tags": {
             "type": "array",
             "items": {
@@ -44385,13 +42189,6 @@
             "description": "Unique reference identifier",
             "example": "slack.incident_workflow"
           },
-          "retired_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
           "tags": {
             "type": "array",
             "items": {
@@ -44449,24 +42246,6 @@
           }
         }
       },
-      "WorkflowTaskWaitKind": {
-        "type": "string",
-        "enum": [
-          "inquiry",
-          "execution",
-          "work_queue_item"
-        ]
-      },
-      "WorkflowTaskWaitState": {
-        "type": "string",
-        "enum": [
-          "waiting",
-          "failed",
-          "timed_out",
-          "cancelled",
-          "released"
-        ]
-      },
       "i64": {
         "type": "integer",
         "format": "int64"
@@ -44521,10 +42300,6 @@
     {
       "name": "inquiries",
       "description": "Inquiry (human-in-the-loop) endpoints"
-    },
-    {
-      "name": "external identity mappings",
-      "description": "Integration-owned external actor mappings"
     },
     {
       "name": "events",
