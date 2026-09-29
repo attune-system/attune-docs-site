@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.7.1"
+    "version": "0.7.0"
   },
   "servers": [
     {
@@ -9392,9 +9392,6 @@
                 }
               }
             }
-          },
-          "403": {
-            "description": "Caller is not authorized to cancel the execution"
           },
           "404": {
             "description": "Execution not found"
@@ -30565,6 +30562,7 @@
           "ref",
           "label",
           "scope_type",
+          "visibility",
           "spec"
         ],
         "properties": {
@@ -30638,14 +30636,7 @@
             "default": []
           },
           "visibility": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/DashboardVisibility"
-              }
-            ]
+            "$ref": "#/components/schemas/DashboardVisibility"
           }
         },
         "additionalProperties": false
@@ -32311,7 +32302,8 @@
         "enum": [
           "global",
           "pack",
-          "identity"
+          "identity",
+          "tenant"
         ]
       },
       "DashboardSourceCatalogResponse": {
@@ -42129,6 +42121,7 @@
       "UpdateDashboardRequest": {
         "type": "object",
         "required": [
+          "spec",
           "expected_revision"
         ],
         "properties": {
@@ -42995,6 +42988,11 @@
       },
       "UpdateWorkQueueRequest": {
         "type": "object",
+        "required": [
+          "item_schema",
+          "action_params",
+          "config"
+        ],
         "properties": {
           "accepting_new_items": {
             "type": [
