@@ -223,7 +223,7 @@ Sensors should:
 - Start cleanly when the sensor service starts.
 - Handle transient external failures with backoff.
 - Include stable source identifiers in payloads when possible so rules/actions can be idempotent.
-- Log enough context to debug failed polling. Sensor stdout/stderr are written to rotating file-backed artifact versions and can be tailed from the sensor detail page; lines are not forwarded one-by-one into service tracing logs.
+- Log enough context to debug failed polling. Sensor stdout and stderr are written to rotating file-backed artifact versions and can be tailed from the sensor detail page. They are not forwarded into worker output by default. Operators can enable structured NDJSON copies with `log.mirror_runtime_stdout_to_stdio` and `log.mirror_runtime_stderr_to_stdio`. Sensors do not have schema-based output redaction, so do not print credentials or customer data.
 - Shut down cleanly on service termination.
 - Avoid blocking unrelated sensors.
 

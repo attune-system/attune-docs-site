@@ -131,9 +131,10 @@ When troubleshooting Datadog/Splunk/collector ingestion:
 2. Confirm container labels are present (`com.attune.service`, `com.attune.log.contract=container-stdout-stderr`, `com.attune.log.transport=docker`, `com.attune.log.volume_hint=non-forwarding`, service/env/version tags).
 3. Confirm JSON body parsing is enabled in the collector pipeline.
 4. If using raw Docker `json-file` tailing, confirm your pipeline adds Docker metadata; labels are not embedded in log lines by default.
-5. Confirm runtime stdout/stderr expectations: raw execution/sensor logs are in private `runtime_log` artifacts, not mirrored into service logs.
+5. Confirm runtime stdout and stderr expectations. Private `runtime_log` artifacts are authoritative. Worker and sensor-worker streams contain NDJSON copies only when `log.mirror_runtime_stdout_to_stdio` or `log.mirror_runtime_stderr_to_stdio` enables the matching stream.
+6. If mirroring is enabled, filter for `event: "attune.runtime_log"` and confirm the collector keeps `stdout` and `stderr` separate.
 
-For setup examples, see [Docker Operations](/operations/docker/#export-logs-to-external-systems).
+For setup examples, see [Docker Operations](/operations/docker/#export-logs-to-external-systems). For the mirror setting and its security warning, see [Configuration](/administration/configuration/#mirror-runtime-logs-to-worker-output).
 
 ## Related
 

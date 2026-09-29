@@ -25,6 +25,8 @@ Set `ATTUNE_CONFIG` to choose the base config file. Set `ATTUNE__ENVIRONMENT` to
 | `server.port` | API port. |
 | `server.cors_origins` | Allowed Web UI/API origins. |
 | `log.level` | Tracing/log level. |
+| `log.mirror_runtime_stdout_to_stdio` | Emits best-effort NDJSON copies of action and managed sensor `stdout` through worker and sensor-worker `stdout`. Defaults to `false`. |
+| `log.mirror_runtime_stderr_to_stdio` | Emits best-effort NDJSON copies of action and managed sensor `stderr` through worker and sensor-worker `stderr`. Defaults to `false`. |
 | `message_queue.url` | RabbitMQ connection URL. |
 | `packs_base_dir` | Installed pack directory. |
 | `runtime_envs_dir` | Runtime environment root. |
@@ -54,6 +56,8 @@ ATTUNE__DATABASE__URL=postgresql://attune:attune@postgres:5432/attune
 ATTUNE__MESSAGE_QUEUE__URL=amqp://attune:attune@rabbitmq:5672
 ATTUNE__SERVER__PORT=8080
 ATTUNE__SERVER__CORS_ORIGINS=http://localhost:3000
+ATTUNE__LOG__MIRROR_RUNTIME_STDOUT_TO_STDIO=true
+ATTUNE__LOG__MIRROR_RUNTIME_STDERR_TO_STDIO=false
 ATTUNE__SECURITY__JWT_SECRET=...
 ATTUNE__SECURITY__ENCRYPTION_KEY=...
 ATTUNE__DEFAULT_EXECUTION_TIMEOUT_SECONDS=600

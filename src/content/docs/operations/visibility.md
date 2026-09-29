@@ -147,6 +147,12 @@ Sensor stdout/stderr logs are written under:
 {artifacts_dir}/sensors/{sensor_ref}/stderr.log
 ```
 
+These private `runtime_log` artifacts are the authoritative record. Runtime output is not included in worker service logs by default.
+
+Set `log.mirror_runtime_stdout_to_stdio: true` or `ATTUNE__LOG__MIRROR_RUNTIME_STDOUT_TO_STDIO=true` to mirror runtime `stdout`. Set `log.mirror_runtime_stderr_to_stdio: true` or `ATTUNE__LOG__MIRROR_RUNTIME_STDERR_TO_STDIO=true` to mirror runtime `stderr`. You can enable either stream or both. Source `stdout` maps to worker `stdout`, and source `stderr` maps to worker `stderr`.
+
+For actions with schema-declared secret outputs, Attune delays mirroring until the action finishes. It redacts and serializes the structured result again, and it replaces free-form diagnostics with `[REDACTED]`. Unsafe or incomplete action output is not mirrored. Managed sensors do not have this schema-based protection. The mirror is best-effort and can expose sensor output to users and systems that have access to container logs.
+
 The sensor detail page can tail and follow both streams. The API supports:
 
 ```http

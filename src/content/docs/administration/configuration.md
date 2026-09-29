@@ -45,6 +45,33 @@ ATTUNE__SECURITY__JWT_SECRET="$(openssl rand -base64 64)"
 ATTUNE__SECURITY__ENCRYPTION_KEY="$(openssl rand -base64 32)"
 ```
 
+## Mirror runtime logs to worker output
+
+Action and managed sensor output is stored in private `runtime_log` artifacts by default. Enable either stream to send structured copies to container log collectors:
+
+```yaml
+log:
+  mirror_runtime_stdout_to_stdio: true
+  mirror_runtime_stderr_to_stdio: false
+```
+
+You can also configure each stream with an environment variable:
+
+```bash
+ATTUNE__LOG__MIRROR_RUNTIME_STDOUT_TO_STDIO=true
+ATTUNE__LOG__MIRROR_RUNTIME_STDERR_TO_STDIO=false
+```
+
+The action worker or sensor worker emits enabled source streams as NDJSON records. Child `stdout` maps to worker `stdout`, and child `stderr` maps to worker `stderr`. Each record has `event: "attune.runtime_log"`, correlation fields, byte offsets, the source stream, and the body. JSON object bodies remain objects. Attune encodes invalid UTF-8 as base64 and splits lines larger than 128 KiB into bounded records.
+
+For actions without schema-declared secret outputs, mirroring remains live. If an action marks any output field with `secret: true`, Attune waits for the action to finish before it mirrors output. Attune parses the structured result, replaces secret fields with `[REDACTED]`, and serializes the result again. It replaces non-empty `stderr` and JSON prefix diagnostics with `[REDACTED]`. If the output is text, malformed, truncated, incomplete, cancelled, or timed out, Attune does not mirror either action stream.
+
+The mirror is best-effort and does not replace artifact-backed runtime logs. Those artifacts remain the authoritative record. Mirrored output follows the access and retention rules of your container logging system instead of Attune's artifact rules.
+
+:::caution
+Managed sensors do not have an action output schema. Sensor output is therefore mirrored without schema-based redaction. Enable either setting only when your container log access and retention policies can protect runtime output. Both settings default to `false`.
+:::
+
 ## Important paths
 
 | Setting | Purpose | Docker default |
