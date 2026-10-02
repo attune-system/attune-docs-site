@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.7.4"
+    "version": "0.7.3"
   },
   "servers": [
     {
@@ -13462,16 +13462,6 @@
                 }
               }
             }
-          },
-          "502": {
-            "description": "Selected index could not be fetched or validated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
           }
         },
         "security": [
@@ -21566,7 +21556,7 @@
         "operationId": "oidc_callback",
         "responses": {
           "307": {
-            "description": "Redirect to the application callback"
+            "description": "Redirect to the application or CLI callback"
           },
           "400": {
             "description": "Invalid OIDC callback"
@@ -22221,258 +22211,6 @@
         ]
       }
     },
-    "/auth/oidc/device/poll": {
-      "post": {
-        "tags": [
-          "auth"
-        ],
-        "operationId": "oidc_device_poll",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DevicePollRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Device grant status or Attune credentials",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "description": "Standard API response wrapper",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "oneOf": [
-                        {
-                          "type": "object",
-                          "required": [
-                            "reason",
-                            "device_code",
-                            "interval",
-                            "status"
-                          ],
-                          "properties": {
-                            "device_code": {
-                              "type": "string"
-                            },
-                            "interval": {
-                              "type": "integer",
-                              "format": "int64",
-                              "minimum": 0
-                            },
-                            "reason": {
-                              "$ref": "#/components/schemas/DeviceWaitReason"
-                            },
-                            "status": {
-                              "type": "string",
-                              "enum": [
-                                "waiting"
-                              ]
-                            }
-                          }
-                        },
-                        {
-                          "type": "object",
-                          "required": [
-                            "tokens",
-                            "status"
-                          ],
-                          "properties": {
-                            "status": {
-                              "type": "string",
-                              "enum": [
-                                "authorized"
-                              ]
-                            },
-                            "tokens": {
-                              "$ref": "#/components/schemas/TokenResponse"
-                            }
-                          }
-                        },
-                        {
-                          "type": "object",
-                          "required": [
-                            "status"
-                          ],
-                          "properties": {
-                            "status": {
-                              "type": "string",
-                              "enum": [
-                                "access_denied"
-                              ]
-                            }
-                          }
-                        },
-                        {
-                          "type": "object",
-                          "required": [
-                            "status"
-                          ],
-                          "properties": {
-                            "status": {
-                              "type": "string",
-                              "enum": [
-                                "expired"
-                              ]
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    "message": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "description": "Optional message"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid device authorization session",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid provider identity token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Identity is frozen or has a conflicting binding",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "502": {
-            "description": "OIDC provider exchange failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/oidc/device/start": {
-      "post": {
-        "tags": [
-          "auth"
-        ],
-        "operationId": "oidc_device_start",
-        "responses": {
-          "200": {
-            "description": "Device authorization instructions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "description": "Standard API response wrapper",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "description": "Device-code instructions returned by Attune's OIDC broker.",
-                      "required": [
-                        "device_code",
-                        "user_code",
-                        "verification_uri",
-                        "expires_in"
-                      ],
-                      "properties": {
-                        "device_code": {
-                          "type": "string",
-                          "description": "Opaque, encrypted authorization session. Never display this value."
-                        },
-                        "expires_in": {
-                          "type": "integer",
-                          "format": "int64",
-                          "minimum": 0
-                        },
-                        "interval": {
-                          "type": "integer",
-                          "format": "int64",
-                          "minimum": 0
-                        },
-                        "user_code": {
-                          "type": "string"
-                        },
-                        "verification_uri": {
-                          "type": "string"
-                        },
-                        "verification_uri_complete": {
-                          "type": [
-                            "string",
-                            "null"
-                          ]
-                        }
-                      }
-                    },
-                    "message": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "description": "Optional message"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "501": {
-            "description": "OIDC device grant is unsupported or not configured",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "502": {
-            "description": "OIDC provider device authorization failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/auth/oidc/login": {
       "get": {
         "tags": [
@@ -22485,6 +22223,15 @@
             "name": "redirect_to",
             "in": "query",
             "description": "Application path to return to after login",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cli_redirect_uri",
+            "in": "query",
+            "description": "Local CLI callback URI",
             "required": false,
             "schema": {
               "type": "string"
@@ -32915,26 +32662,6 @@
           }
         }
       },
-      "DevicePollRequest": {
-        "type": "object",
-        "required": [
-          "device_code"
-        ],
-        "properties": {
-          "device_code": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "DeviceWaitReason": {
-        "type": "string",
-        "enum": [
-          "authorization_pending",
-          "slow_down",
-          "provider_timeout"
-        ]
-      },
       "DownloadPacksRequest": {
         "type": "object",
         "description": "Request DTO for downloading packs",
@@ -42678,6 +42405,9 @@
       "UpdatePackRegistryIndexRequest": {
         "type": "object",
         "description": "Request to update a configured pack registry index.",
+        "required": [
+          "headers"
+        ],
         "properties": {
           "enabled": {
             "type": [
