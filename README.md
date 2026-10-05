@@ -24,10 +24,31 @@ Astro writes the static site and Pagefind search index to `dist/`.
 
 ## Configure community links
 
-The Slack invitation and project support links use the project's public URLs by
-default. Override either link at build time with
-`PUBLIC_SLACK_INVITE_URL` or `PUBLIC_SUPPORT_URL`. Container builds accept the
-same names as build arguments:
+Set `slackInviteUrl` in your Helm values to change the Slack invitation:
+
+```yaml
+slackInviteUrl: "https://join.slack.com/t/attune-dev/shared_invite/YOUR_INVITE"
+```
+
+Apply the values with `helm upgrade --install`. The chart passes the value as
+`SLACK_INVITE_URL` and rolls the pods. You can keep the same image for later invite
+changes. Deploy an image built with runtime redirect support once before using
+this value. Previously published images do not read it.
+
+For a standalone container, set `SLACK_INVITE_URL` in its runtime environment and
+restart the container after changing it. The URL must use HTTPS without credentials.
+Both servers reject whitespace and characters unsafe for nginx configuration.
+
+Slack buttons point to `/community/slack/`. At startup, the nginx entrypoint hook
+reads the runtime invite and writes a redirect configuration under `/tmp`.
+The server returns a temporary redirect with `Cache-Control: no-store`. This
+works without JavaScript. If the runtime value is empty, nginx serves a static
+page that redirects to the invite packaged in the image.
+
+Local Astro development and preview use that static fallback. Override the
+fallback at build time with `PUBLIC_SLACK_INVITE_URL`. The support link remains
+a build-time setting named `PUBLIC_SUPPORT_URL`. Container builds accept both
+as build arguments:
 
 ```bash
 docker build \

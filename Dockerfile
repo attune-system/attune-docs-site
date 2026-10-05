@@ -14,6 +14,7 @@ RUN npm run build
 FROM nginxinc/nginx-unprivileged:1.29-alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --chmod=755 docker/40-slack-redirect.sh /docker-entrypoint.d/40-slack-redirect.sh
 COPY --from=build /site/dist /usr/share/nginx/html
 
 EXPOSE 8080

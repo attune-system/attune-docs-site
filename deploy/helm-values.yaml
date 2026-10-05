@@ -3,6 +3,8 @@ image:
   tag: "0.1.11"
   pullPolicy: IfNotPresent
 
+slackInviteUrl: ""
+
 ingress:
   enabled: true
   className: traefik

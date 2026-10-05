@@ -9,7 +9,16 @@ interface SiteLinkEnvironment {
 
 export function resolveSiteLinks(env: SiteLinkEnvironment) {
   return {
-    slackInviteUrl: env.PUBLIC_SLACK_INVITE_URL?.trim() || defaultSlackInviteUrl,
+    slackInviteUrl: "/community/slack/",
     supportUrl: env.PUBLIC_SUPPORT_URL?.trim() || defaultSupportUrl,
   };
+}
+
+export function resolveSlackInviteDestination(env: SiteLinkEnvironment) {
+  const destination = env.PUBLIC_SLACK_INVITE_URL?.trim() || defaultSlackInviteUrl;
+  const url = new URL(destination);
+  if (url.protocol !== "https:" || !url.hostname || url.username || url.password) {
+    throw new Error("PUBLIC_SLACK_INVITE_URL must be an absolute HTTPS URL without credentials");
+  }
+  return destination;
 }

@@ -1,0 +1,21 @@
+---
+import { resolveSlackInviteDestination } from "../../../config/siteLinks";
+
+const destination = resolveSlackInviteDestination({
+  PUBLIC_SLACK_INVITE_URL: import.meta.env.PUBLIC_SLACK_INVITE_URL,
+});
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="robots" content="noindex" />
+    <meta http-equiv="refresh" content={`0;url=${destination}`} />
+    <title>Join Attune on Slack</title>
+  </head>
+  <body>
+    <p><a href={destination}>Join the Attune Slack workspace</a></p>
+  </body>
+</html>
