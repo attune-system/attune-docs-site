@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.7.5"
+    "version": "0.7.4"
   },
   "servers": [
     {
@@ -10153,18 +10153,6 @@
               "minimum": 1
             },
             "example": 50
-          },
-          {
-            "name": "login",
-            "in": "query",
-            "description": "Exact identity login.",
-            "required": false,
-            "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
-            }
           }
         ],
         "responses": {
@@ -12680,7 +12668,7 @@
                           "example": "2024-01-13T10:30:00Z"
                         },
                         "value": {
-                          "description": "JSON value, or null when the caller cannot read and decrypt encrypted material."
+                          "description": "The secret value (decrypted if encrypted). Can be a string, object, array, number, or boolean."
                         }
                       }
                     },
@@ -12872,7 +12860,7 @@
                           "example": "2024-01-13T10:30:00Z"
                         },
                         "value": {
-                          "description": "JSON value, or null when the caller cannot read and decrypt encrypted material."
+                          "description": "The secret value (decrypted if encrypted). Can be a string, object, array, number, or boolean."
                         }
                       }
                     },
@@ -13069,7 +13057,7 @@
                           "example": "2024-01-13T10:30:00Z"
                         },
                         "value": {
-                          "description": "JSON value, or null when the caller cannot read and decrypt encrypted material."
+                          "description": "The secret value (decrypted if encrypted). Can be a string, object, array, number, or boolean."
                         }
                       }
                     },
@@ -13128,81 +13116,6 @@
           },
           "404": {
             "description": "Key not found"
-          }
-        },
-        "security": [
-          {
-            "bearer_auth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/keys/{ref}/sign-jwt": {
-      "post": {
-        "tags": [
-          "secrets"
-        ],
-        "operationId": "sign_key_jwt",
-        "parameters": [
-          {
-            "name": "ref",
-            "in": "path",
-            "description": "System-owned signing key reference",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SignKeyJwtRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Approved signed JWT assertion; no private key is disclosed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "description": "Standard API response wrapper",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "required": [
-                        "assertion",
-                        "expires_at"
-                      ],
-                      "properties": {
-                        "assertion": {
-                          "type": "string"
-                        },
-                        "expires_at": {
-                          "type": "integer",
-                          "format": "int64"
-                        }
-                      }
-                    },
-                    "message": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "description": "Optional message"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -16860,101 +16773,6 @@
       }
     },
     "/api/v1/permissions/assignments": {
-      "get": {
-        "tags": [
-          "permissions"
-        ],
-        "operationId": "list_permission_assignments",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "description": "Page number (1-based)",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "minimum": 1
-            },
-            "example": 1
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "description": "Number of items per page",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "maximum": 100,
-              "minimum": 1
-            },
-            "example": 50
-          },
-          {
-            "name": "identity_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
-              "format": "int64"
-            }
-          },
-          {
-            "name": "identity_login",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
-            }
-          },
-          {
-            "name": "role",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
-            }
-          },
-          {
-            "name": "permission_set_ref",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": [
-                "string",
-                "null"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Direct identity and role permission assignments",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PaginatedResponse_PermissionBindingResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer_auth": []
-          }
-        ]
-      },
       "post": {
         "tags": [
           "permissions"
@@ -17129,15 +16947,6 @@
                 "null"
               ]
             }
-          },
-          {
-            "name": "include_retired",
-            "in": "query",
-            "description": "Include retired permission sets in administrative results.",
-            "required": false,
-            "schema": {
-              "type": "boolean"
-            }
           }
         ],
         "responses": {
@@ -17149,111 +16958,6 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/PermissionSetSummary"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer_auth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/permissions/sets/by-ref/{permission_set_ref}": {
-      "get": {
-        "tags": [
-          "permissions"
-        ],
-        "operationId": "get_permission_set",
-        "parameters": [
-          {
-            "name": "permission_set_ref",
-            "in": "path",
-            "description": "Permission set ref",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Permission set details, including retired sets",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "description": "Standard API response wrapper",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "required": [
-                        "id",
-                        "ref",
-                        "grants",
-                        "management_origin",
-                        "roles"
-                      ],
-                      "properties": {
-                        "description": {
-                          "type": [
-                            "string",
-                            "null"
-                          ]
-                        },
-                        "grants": {
-                          "$ref": "#/components/schemas/Value"
-                        },
-                        "id": {
-                          "type": "integer",
-                          "format": "int64"
-                        },
-                        "label": {
-                          "type": [
-                            "string",
-                            "null"
-                          ]
-                        },
-                        "management_origin": {
-                          "$ref": "#/components/schemas/ManagementOriginKind"
-                        },
-                        "pack_ref": {
-                          "type": [
-                            "string",
-                            "null"
-                          ]
-                        },
-                        "ref": {
-                          "type": "string"
-                        },
-                        "retired_at": {
-                          "type": [
-                            "string",
-                            "null"
-                          ],
-                          "format": "date-time"
-                        },
-                        "roles": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/PermissionSetRoleAssignmentResponse"
-                          }
-                        }
-                      }
-                    },
-                    "message": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "description": "Optional message"
-                    }
                   }
                 }
               }
@@ -17356,15 +17060,6 @@
               "type": "integer",
               "format": "int64"
             }
-          },
-          {
-            "name": "dry_run",
-            "in": "query",
-            "description": "Validate and preview the update without persisting it.",
-            "required": false,
-            "schema": {
-              "type": "boolean"
-            }
           }
         ],
         "requestBody": {
@@ -17395,7 +17090,6 @@
                         "id",
                         "ref",
                         "grants",
-                        "management_origin",
                         "roles"
                       ],
                       "properties": {
@@ -17417,9 +17111,6 @@
                             "string",
                             "null"
                           ]
-                        },
-                        "management_origin": {
-                          "$ref": "#/components/schemas/ManagementOriginKind"
                         },
                         "pack_ref": {
                           "type": [
@@ -26111,7 +25802,7 @@
                 "example": "2024-01-13T10:30:00Z"
               },
               "value": {
-                "description": "JSON value, or null when the caller cannot read and decrypt encrypted material."
+                "description": "The secret value (decrypted if encrypted). Can be a string, object, array, number, or boolean."
               }
             }
           },
@@ -35484,7 +35175,7 @@
             "example": "2024-01-13T10:30:00Z"
           },
           "value": {
-            "description": "JSON value, or null when the caller cannot read and decrypt encrypted material."
+            "description": "The secret value (decrypted if encrypted). Can be a string, object, array, number, or boolean."
           }
         }
       },
@@ -35664,14 +35355,6 @@
             "example": "changeme123"
           }
         }
-      },
-      "ManagementOriginKind": {
-        "type": "string",
-        "enum": [
-          "platform",
-          "pack",
-          "ad_hoc"
-        ]
       },
       "NodeJsEnvironment": {
         "type": "object",
@@ -38354,54 +38037,6 @@
           }
         }
       },
-      "PaginatedResponse_PermissionBindingResponse": {
-        "type": "object",
-        "description": "Paginated response wrapper",
-        "required": [
-          "items",
-          "pagination"
-        ],
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "id",
-                "permission_set_id",
-                "permission_set_ref",
-                "target",
-                "created"
-              ],
-              "properties": {
-                "created": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "id": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "permission_set_id": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "permission_set_ref": {
-                  "type": "string"
-                },
-                "target": {
-                  "$ref": "#/components/schemas/PermissionBindingTarget"
-                }
-              }
-            },
-            "description": "The page items"
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationMeta",
-            "description": "Pagination metadata"
-          }
-        }
-      },
       "PaginatedResponse_PolicySummary": {
         "type": "object",
         "description": "Paginated response wrapper",
@@ -39573,93 +39208,6 @@
           }
         }
       },
-      "PermissionBindingResponse": {
-        "type": "object",
-        "required": [
-          "id",
-          "permission_set_id",
-          "permission_set_ref",
-          "target",
-          "created"
-        ],
-        "properties": {
-          "created": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "permission_set_id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "permission_set_ref": {
-            "type": "string"
-          },
-          "target": {
-            "$ref": "#/components/schemas/PermissionBindingTarget"
-          }
-        }
-      },
-      "PermissionBindingTarget": {
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/PermissionIdentityTarget"
-          },
-          {
-            "$ref": "#/components/schemas/PermissionRoleTarget"
-          }
-        ]
-      },
-      "PermissionIdentityTarget": {
-        "type": "object",
-        "required": [
-          "identity_id",
-          "login",
-          "type"
-        ],
-        "properties": {
-          "identity_id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "login": {
-            "type": "string"
-          },
-          "type": {
-            "$ref": "#/components/schemas/PermissionIdentityTargetType"
-          }
-        }
-      },
-      "PermissionIdentityTargetType": {
-        "type": "string",
-        "enum": [
-          "identity"
-        ]
-      },
-      "PermissionRoleTarget": {
-        "type": "object",
-        "required": [
-          "role",
-          "type"
-        ],
-        "properties": {
-          "role": {
-            "type": "string"
-          },
-          "type": {
-            "$ref": "#/components/schemas/PermissionRoleTargetType"
-          }
-        }
-      },
-      "PermissionRoleTargetType": {
-        "type": "string",
-        "enum": [
-          "role"
-        ]
-      },
       "PermissionSetRoleAssignmentResponse": {
         "type": "object",
         "required": [
@@ -39698,7 +39246,6 @@
           "id",
           "ref",
           "grants",
-          "management_origin",
           "roles"
         ],
         "properties": {
@@ -39720,9 +39267,6 @@
               "string",
               "null"
             ]
-          },
-          "management_origin": {
-            "$ref": "#/components/schemas/ManagementOriginKind"
           },
           "pack_ref": {
             "type": [
@@ -41811,44 +41355,6 @@
           "data": {
             "type": "object",
             "description": "The data to set (replaces existing data entirely)"
-          }
-        }
-      },
-      "SignKeyJwtRequest": {
-        "type": "object",
-        "required": [
-          "profile_ref",
-          "subject",
-          "ttl_seconds"
-        ],
-        "properties": {
-          "profile_ref": {
-            "type": "string"
-          },
-          "subject": {
-            "type": "string"
-          },
-          "ttl_seconds": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          }
-        },
-        "additionalProperties": false
-      },
-      "SignKeyJwtResponse": {
-        "type": "object",
-        "required": [
-          "assertion",
-          "expires_at"
-        ],
-        "properties": {
-          "assertion": {
-            "type": "string"
-          },
-          "expires_at": {
-            "type": "integer",
-            "format": "int64"
           }
         }
       },
