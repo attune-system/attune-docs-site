@@ -32,7 +32,7 @@ slackInviteUrl: "https://join.slack.com/t/attune-dev/shared_invite/YOUR_INVITE"
 
 Apply the values with `helm upgrade --install`. The chart passes the value as
 `SLACK_INVITE_URL` and rolls the pods. You can keep the same image for later invite
-changes. Use image version `0.1.12` or later for runtime redirect support.
+changes. Use image version `0.1.13` or later for runtime redirect support.
 Older images do not read this value.
 
 For a standalone container, set `SLACK_INVITE_URL` in its runtime environment and
@@ -87,7 +87,7 @@ Datastar. Do not add React or another SPA framework.
 ## Deploy with Helm
 
 The deployment pulls the public
-`ghcr.io/attune-system/attune-docs-site:0.1.12` image. Add the Attune chart
+`ghcr.io/attune-system/attune-docs-site:0.1.13` image. Add the Attune chart
 repository, then install the chart with `deploy/helm-values.yaml`:
 
 ```bash
