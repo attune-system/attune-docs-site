@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.8.0"
+    "version": "0.7.5"
   },
   "servers": [
     {
@@ -1465,7 +1465,7 @@
           {
             "name": "since",
             "in": "query",
-            "description": "Inclusive earliest UTC bucket start (ISO 8601). Defaults to 24 hours ago.",
+            "description": "Start of time range (ISO 8601). Defaults to 24 hours ago.",
             "required": false,
             "schema": {
               "type": [
@@ -1479,7 +1479,7 @@
           {
             "name": "until",
             "in": "query",
-            "description": "Inclusive latest UTC bucket start (ISO 8601). Defaults to now.",
+            "description": "End of time range (ISO 8601). Defaults to now.",
             "required": false,
             "schema": {
               "type": [
@@ -1523,7 +1523,6 @@
                       "type": "object",
                       "description": "Combined dashboard analytics response.\n\nReturns all key metrics in a single response for the dashboard page,\navoiding multiple round-trips.",
                       "required": [
-                        "read_coverage",
                         "since",
                         "until",
                         "execution_throughput",
@@ -1565,10 +1564,6 @@
                         "failure_rate": {
                           "$ref": "#/components/schemas/FailureRateResponse",
                           "description": "Execution failure rate summary"
-                        },
-                        "read_coverage": {
-                          "$ref": "#/components/schemas/DashboardAnalyticsCoverage",
-                          "description": "Separate per-metric coverage, because sources can have different holes."
                         },
                         "since": {
                           "type": "string",
@@ -1621,7 +1616,7 @@
           {
             "name": "since",
             "in": "query",
-            "description": "Inclusive earliest UTC bucket start (ISO 8601). Defaults to 24 hours ago.",
+            "description": "Start of time range (ISO 8601). Defaults to 24 hours ago.",
             "required": false,
             "schema": {
               "type": [
@@ -1635,7 +1630,7 @@
           {
             "name": "until",
             "in": "query",
-            "description": "Inclusive latest UTC bucket start (ISO 8601). Defaults to now.",
+            "description": "End of time range (ISO 8601). Defaults to now.",
             "required": false,
             "schema": {
               "type": [
@@ -1735,7 +1730,7 @@
           {
             "name": "since",
             "in": "query",
-            "description": "Inclusive earliest UTC bucket start (ISO 8601). Defaults to 24 hours ago.",
+            "description": "Start of time range (ISO 8601). Defaults to 24 hours ago.",
             "required": false,
             "schema": {
               "type": [
@@ -1749,7 +1744,7 @@
           {
             "name": "until",
             "in": "query",
-            "description": "Inclusive latest UTC bucket start (ISO 8601). Defaults to now.",
+            "description": "End of time range (ISO 8601). Defaults to now.",
             "required": false,
             "schema": {
               "type": [
@@ -1793,7 +1788,6 @@
                       "type": "object",
                       "description": "Response for event volume over time.",
                       "required": [
-                        "read_coverage",
                         "since",
                         "until",
                         "data"
@@ -1805,9 +1799,6 @@
                             "$ref": "#/components/schemas/TimeSeriesPoint"
                           },
                           "description": "Data points: one per bucket (total events created)"
-                        },
-                        "read_coverage": {
-                          "$ref": "#/components/schemas/AnalyticsReadMetadata"
                         },
                         "since": {
                           "type": "string",
@@ -1853,7 +1844,7 @@
           {
             "name": "since",
             "in": "query",
-            "description": "Inclusive earliest UTC bucket start (ISO 8601). Defaults to 24 hours ago.",
+            "description": "Start of time range (ISO 8601). Defaults to 24 hours ago.",
             "required": false,
             "schema": {
               "type": [
@@ -1867,7 +1858,7 @@
           {
             "name": "until",
             "in": "query",
-            "description": "Inclusive latest UTC bucket start (ISO 8601). Defaults to now.",
+            "description": "End of time range (ISO 8601). Defaults to now.",
             "required": false,
             "schema": {
               "type": [
@@ -1911,7 +1902,6 @@
                       "type": "object",
                       "description": "Response for the execution failure rate summary.",
                       "required": [
-                        "read_coverage",
                         "since",
                         "until",
                         "total_terminal",
@@ -1924,13 +1914,13 @@
                         "completed_count": {
                           "type": "integer",
                           "format": "int64",
-                          "description": "Number of transitions to completed",
+                          "description": "Number of completed executions",
                           "example": 85
                         },
                         "failed_count": {
                           "type": "integer",
                           "format": "int64",
-                          "description": "Number of transitions to failed, including retry attempts",
+                          "description": "Number of failed executions",
                           "example": 12
                         },
                         "failure_rate_pct": {
@@ -1938,9 +1928,6 @@
                           "format": "double",
                           "description": "Failure rate as a percentage (0.0 – 100.0)",
                           "example": 15.0
-                        },
-                        "read_coverage": {
-                          "$ref": "#/components/schemas/AnalyticsReadMetadata"
                         },
                         "since": {
                           "type": "string",
@@ -1950,13 +1937,13 @@
                         "timeout_count": {
                           "type": "integer",
                           "format": "int64",
-                          "description": "Number of transitions to timeout, including retry attempts",
+                          "description": "Number of timed-out executions",
                           "example": 3
                         },
                         "total_terminal": {
                           "type": "integer",
                           "format": "int64",
-                          "description": "Total transitions to completed, failed, or timeout in the included hours",
+                          "description": "Total executions reaching a terminal state in the window",
                           "example": 100
                         },
                         "until": {
@@ -1998,7 +1985,7 @@
           {
             "name": "since",
             "in": "query",
-            "description": "Inclusive earliest UTC bucket start (ISO 8601). Defaults to 24 hours ago.",
+            "description": "Start of time range (ISO 8601). Defaults to 24 hours ago.",
             "required": false,
             "schema": {
               "type": [
@@ -2012,7 +1999,7 @@
           {
             "name": "until",
             "in": "query",
-            "description": "Inclusive latest UTC bucket start (ISO 8601). Defaults to now.",
+            "description": "End of time range (ISO 8601). Defaults to now.",
             "required": false,
             "schema": {
               "type": [
@@ -2056,7 +2043,6 @@
                       "type": "object",
                       "description": "Response for execution status transitions over time.",
                       "required": [
-                        "read_coverage",
                         "since",
                         "until",
                         "data"
@@ -2068,9 +2054,6 @@
                             "$ref": "#/components/schemas/TimeSeriesPoint"
                           },
                           "description": "Data points: one per (bucket, status) pair"
-                        },
-                        "read_coverage": {
-                          "$ref": "#/components/schemas/AnalyticsReadMetadata"
                         },
                         "since": {
                           "type": "string",
@@ -2116,7 +2099,7 @@
           {
             "name": "since",
             "in": "query",
-            "description": "Inclusive earliest UTC bucket start (ISO 8601). Defaults to 24 hours ago.",
+            "description": "Start of time range (ISO 8601). Defaults to 24 hours ago.",
             "required": false,
             "schema": {
               "type": [
@@ -2130,7 +2113,7 @@
           {
             "name": "until",
             "in": "query",
-            "description": "Inclusive latest UTC bucket start (ISO 8601). Defaults to now.",
+            "description": "End of time range (ISO 8601). Defaults to now.",
             "required": false,
             "schema": {
               "type": [
@@ -2174,7 +2157,6 @@
                       "type": "object",
                       "description": "Response for execution throughput over time.",
                       "required": [
-                        "read_coverage",
                         "since",
                         "until",
                         "data"
@@ -2186,9 +2168,6 @@
                             "$ref": "#/components/schemas/TimeSeriesPoint"
                           },
                           "description": "Data points: one per bucket (total executions created)"
-                        },
-                        "read_coverage": {
-                          "$ref": "#/components/schemas/AnalyticsReadMetadata"
                         },
                         "since": {
                           "type": "string",
@@ -2234,7 +2213,7 @@
           {
             "name": "since",
             "in": "query",
-            "description": "Inclusive earliest UTC bucket start (ISO 8601). Defaults to 24 hours ago.",
+            "description": "Start of time range (ISO 8601). Defaults to 24 hours ago.",
             "required": false,
             "schema": {
               "type": [
@@ -2248,7 +2227,7 @@
           {
             "name": "until",
             "in": "query",
-            "description": "Inclusive latest UTC bucket start (ISO 8601). Defaults to now.",
+            "description": "End of time range (ISO 8601). Defaults to now.",
             "required": false,
             "schema": {
               "type": [
@@ -2292,7 +2271,6 @@
                       "type": "object",
                       "description": "Response for worker status transitions over time.",
                       "required": [
-                        "read_coverage",
                         "since",
                         "until",
                         "data"
@@ -2304,9 +2282,6 @@
                             "$ref": "#/components/schemas/TimeSeriesPoint"
                           },
                           "description": "Data points: one per (bucket, status) pair"
-                        },
-                        "read_coverage": {
-                          "$ref": "#/components/schemas/AnalyticsReadMetadata"
                         },
                         "since": {
                           "type": "string",
@@ -6653,7 +6628,7 @@
         "tags": [
           "caches"
         ],
-        "summary": "Begin a staging generation.\nSame-ID retries retain the original upload contract. A different refresh ID\nfollows the namespace's `refresh_concurrency` policy: reuse an unpublished\ngeneration, return a conflict, or create in parallel.\nExecution attribution comes from authentication, never the request body.",
+        "summary": "Begin a staging generation.",
         "operationId": "create_generation",
         "parameters": [
           {
@@ -6678,7 +6653,7 @@
         },
         "responses": {
           "200": {
-            "description": "Matching idempotent replay or existing unpublished generation reused by namespace policy",
+            "description": "Matching idempotent generation replay",
             "content": {
               "application/json": {
                 "schema": {
@@ -6738,7 +6713,7 @@
             }
           },
           "409": {
-            "description": "Refresh already in progress (code cache_refresh_in_progress with generation_id and created_by_execution in details), refresh id, active-generation precondition, namespace state, or quota conflict",
+            "description": "Refresh id, active-generation precondition, namespace state, or quota conflict",
             "content": {
               "application/json": {
                 "schema": {
@@ -18848,49 +18823,8 @@
           "403": {
             "description": "Forbidden"
           },
-          "422": {
-            "description": "Malformed retention configuration"
-          },
           "500": {
             "description": "Internal server error"
-          }
-        },
-        "security": [
-          {
-            "bearer_auth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/retention-config/native-status": {
-      "get": {
-        "tags": [
-          "retention"
-        ],
-        "summary": "Inspect partition coverage, DEFAULT backlog, summary invalidations and job cadences.",
-        "operationId": "get_native_maintenance_status",
-        "responses": {
-          "200": {
-            "description": "Native maintenance observations",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponse_NativeMaintenanceStatus"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "500": {
-            "description": "Internal server error"
-          },
-          "503": {
-            "description": "Native maintenance observations temporarily unavailable"
           }
         },
         "security": [
@@ -24112,57 +24046,6 @@
           }
         }
       },
-      "AnalyticsReadMetadata": {
-        "type": "object",
-        "description": "Coverage describes only this read's source-time bounds, including ledger holes.",
-        "required": [
-          "mode",
-          "summary_ranges",
-          "raw_ranges"
-        ],
-        "properties": {
-          "mode": {
-            "$ref": "#/components/schemas/DashboardFreshnessMode"
-          },
-          "oldest_refresh": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time",
-            "description": "Oldest refresh actually used. This does not guarantee global coverage."
-          },
-          "raw_ranges": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AnalyticsReadRange"
-            }
-          },
-          "summary_ranges": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AnalyticsReadRange"
-            }
-          }
-        }
-      },
-      "AnalyticsReadRange": {
-        "type": "object",
-        "required": [
-          "start",
-          "end"
-        ],
-        "properties": {
-          "end": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "start": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
       "AnalyzedPack": {
         "type": "object",
         "description": "Information about an analyzed pack",
@@ -26241,62 +26124,6 @@
           }
         }
       },
-      "ApiResponse_NativeMaintenanceStatus": {
-        "type": "object",
-        "description": "Standard API response wrapper",
-        "required": [
-          "data"
-        ],
-        "properties": {
-          "data": {
-            "type": "object",
-            "required": [
-              "observed_at",
-              "enabled",
-              "partitions",
-              "summaries",
-              "schedule"
-            ],
-            "properties": {
-              "enabled": {
-                "type": "boolean",
-                "description": "Persisted native-maintenance switch, independent of row retention."
-              },
-              "observed_at": {
-                "type": "string",
-                "format": "date-time",
-                "description": "UTC time at which the API began collecting these observations."
-              },
-              "partitions": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/PartitionStatus"
-                }
-              },
-              "schedule": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/MaintenanceScheduleStatus"
-                }
-              },
-              "summaries": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/SummaryStatus"
-                },
-                "description": "Coverage extrema do not imply continuous coverage. Dirty hours use raw reads."
-              }
-            }
-          },
-          "message": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Optional message"
-          }
-        }
-      },
       "ApiResponse_PackInstallResponse": {
         "type": "object",
         "description": "Standard API response wrapper",
@@ -27025,7 +26852,7 @@
               "batch_size": {
                 "type": "integer",
                 "format": "int64",
-                "description": "Maximum rows to delete in each committed batch."
+                "description": "Maximum rows to delete per target per cycle for regular tables."
               },
               "cache_retention": {
                 "$ref": "#/components/schemas/CacheRetentionConfig",
@@ -27039,20 +26866,11 @@
               },
               "dry_run": {
                 "type": "boolean",
-                "description": "Report candidate rows without deleting them."
+                "description": "Report candidates without deleting rows/chunks."
               },
               "enabled": {
                 "type": "boolean",
                 "description": "Enable runtime row retention globally."
-              },
-              "max_batches_per_target": {
-                "type": "integer",
-                "format": "int64",
-                "description": "Maximum committed batches per target per cycle. Each target can delete\nat most batch_size * max_batches_per_target rows per cycle."
-              },
-              "native_maintenance": {
-                "$ref": "#/components/schemas/NativeMaintenanceConfig",
-                "description": "Independent native partition/summary jobs. Persisted and reloaded with\nretention settings; raw reads remain available during materialization."
               },
               "targets": {
                 "$ref": "#/components/schemas/RetentionTargetsConfig",
@@ -30030,7 +29848,6 @@
           "checksum",
           "source_revision",
           "created_by",
-          "created_by_execution",
           "created",
           "sealed",
           "activated",
@@ -30073,17 +29890,6 @@
               },
               {
                 "$ref": "#/components/schemas/i64"
-              }
-            ]
-          },
-          "created_by_execution": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/i64",
-                "description": "Execution that created this generation, recorded from execution authentication.\nHistorical attribution, not proof that the execution is still running.\nNull for creation through other authentication types."
               }
             ]
           },
@@ -30431,17 +30237,6 @@
               "null"
             ],
             "format": "int32"
-          },
-          "refresh_concurrency": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/CacheRefreshConcurrency",
-                "description": "Handling of another unpublished (`staging` or `ready`) generation.\nDefaults to `parallel`; use `reuse` to coordinate one refresh producer."
-              }
-            ]
           }
         }
       },
@@ -30464,7 +30259,6 @@
           "max_retained_bytes",
           "max_retained_generations",
           "max_staging_generations",
-          "refresh_concurrency",
           "tombstoned",
           "retired_at",
           "created",
@@ -30572,9 +30366,6 @@
             ],
             "format": "int64",
             "description": "Active generation record count, when populated."
-          },
-          "refresh_concurrency": {
-            "$ref": "#/components/schemas/CacheRefreshConcurrency"
           },
           "retired_at": {
             "type": [
@@ -30710,15 +30501,6 @@
           }
         }
       },
-      "CacheRefreshConcurrency": {
-        "type": "string",
-        "description": "Admission behavior when a namespace has an unpublished refresh.",
-        "enum": [
-          "reuse",
-          "conflict",
-          "parallel"
-        ]
-      },
       "CacheRetentionConfig": {
         "type": "object",
         "description": "Supervisor-owned cache generation/entry retention configuration.\n\nPersisted as the `cache_retention` JSON object on\n`runtime_retention_config`, exposed through the retention API, and reloaded\nat the start of every supervisor cycle. Cache cleanup runs as a distinct\nstep inside the existing retention cycle and reuses its advisory lock and\ncadence rather than electing a second leader.",
@@ -30734,23 +30516,10 @@
             "format": "int64",
             "description": "Maximum cache alerts emitted per supervisor cycle."
           },
-          "ddl_creation_statement_timeout_milliseconds": {
+          "batch_size": {
             "type": "integer",
             "format": "int64",
-            "description": "Server-side statement deadline for refresh partition creation, independent of cleanup.",
-            "minimum": 0
-          },
-          "ddl_lock_timeout_milliseconds": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Maximum wait for cache partition DDL locks.",
-            "minimum": 0
-          },
-          "ddl_statement_timeout_milliseconds": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Server-side deadline for one atomic generation reclamation.",
-            "minimum": 0
+            "description": "Maximum `cache_entry` rows deleted per bounded batch call."
           },
           "dry_run": {
             "type": "boolean",
@@ -30770,11 +30539,10 @@
             "type": "boolean",
             "description": "Emit a `core.alert` when a namespace's active generation exceeds its\nfreshness target, or a namespace repeatedly fails to publish a\nstaging generation."
           },
-          "max_cleanup_cycle_milliseconds": {
+          "max_batches_per_generation": {
             "type": "integer",
             "format": "int64",
-            "description": "Total generation-reclamation budget per supervisor cycle.",
-            "minimum": 0
+            "description": "Maximum entry-deletion batches performed for a single cleanup-candidate\ngeneration within one supervisor cycle. Bounds how long a single\nhigh-cardinality generation can dominate a cycle; entries are always\ndeleted in indexed bounded batches before the generation row itself."
           },
           "max_generations_per_cycle": {
             "type": "integer",
@@ -30802,18 +30570,6 @@
             "type": "integer",
             "format": "int32",
             "description": "Consecutive staging failures observed for the same namespace within\nthe freshness lookback before a repeated-failure alert is emitted.",
-            "minimum": 0
-          },
-          "statistics_interval_seconds": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Minimum interval between successful parent/leaf cache statistics refreshes.",
-            "minimum": 0
-          },
-          "statistics_statement_timeout_milliseconds": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Independent statement deadline for cache parent/leaf ANALYZE.",
             "minimum": 0
           }
         }
@@ -31403,8 +31159,7 @@
               "null"
             ]
           }
-        },
-        "additionalProperties": false
+        }
       },
       "CreateCacheNamespaceRequest": {
         "allOf": [
@@ -32865,29 +32620,6 @@
           }
         }
       },
-      "DashboardAnalyticsCoverage": {
-        "type": "object",
-        "required": [
-          "execution_throughput",
-          "execution_status",
-          "event_volume",
-          "worker_status"
-        ],
-        "properties": {
-          "event_volume": {
-            "$ref": "#/components/schemas/AnalyticsReadMetadata"
-          },
-          "execution_status": {
-            "$ref": "#/components/schemas/AnalyticsReadMetadata"
-          },
-          "execution_throughput": {
-            "$ref": "#/components/schemas/AnalyticsReadMetadata"
-          },
-          "worker_status": {
-            "$ref": "#/components/schemas/AnalyticsReadMetadata"
-          }
-        }
-      },
       "DashboardAuthorizationMode": {
         "type": "string",
         "enum": [
@@ -33052,9 +32784,9 @@
         "type": "string",
         "enum": [
           "raw_only",
-          "summary_only",
-          "summary_plus_raw",
-          "cache_rawfallback"
+          "aggregate_only",
+          "aggregate_plus_tail",
+          "raw_only_fallback"
         ]
       },
       "DashboardListItemResponse": {
@@ -33338,8 +33070,7 @@
               "string",
               "null"
             ],
-            "format": "date-time",
-            "description": "End of the continuous summarized prefix of this request, if any.\nLater covered islands are listed in read_coverage, not implied here."
+            "format": "date-time"
           },
           "authorization_mode": {
             "$ref": "#/components/schemas/DashboardAuthorizationMode"
@@ -33367,17 +33098,6 @@
             "items": {
               "type": "string"
             }
-          },
-          "read_coverage": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/AnalyticsReadMetadata",
-                "description": "Request-specific ranges. Null for non-summary sources and stale caches."
-              }
-            ]
           },
           "truncated": {
             "type": "boolean"
@@ -34621,7 +34341,6 @@
         "type": "object",
         "description": "Response for the execution failure rate summary.",
         "required": [
-          "read_coverage",
           "since",
           "until",
           "total_terminal",
@@ -34634,13 +34353,13 @@
           "completed_count": {
             "type": "integer",
             "format": "int64",
-            "description": "Number of transitions to completed",
+            "description": "Number of completed executions",
             "example": 85
           },
           "failed_count": {
             "type": "integer",
             "format": "int64",
-            "description": "Number of transitions to failed, including retry attempts",
+            "description": "Number of failed executions",
             "example": 12
           },
           "failure_rate_pct": {
@@ -34648,9 +34367,6 @@
             "format": "double",
             "description": "Failure rate as a percentage (0.0 – 100.0)",
             "example": 15.0
-          },
-          "read_coverage": {
-            "$ref": "#/components/schemas/AnalyticsReadMetadata"
           },
           "since": {
             "type": "string",
@@ -34660,13 +34376,13 @@
           "timeout_count": {
             "type": "integer",
             "format": "int64",
-            "description": "Number of transitions to timeout, including retry attempts",
+            "description": "Number of timed-out executions",
             "example": 3
           },
           "total_terminal": {
             "type": "integer",
             "format": "int64",
-            "description": "Total transitions to completed, failed, or timeout in the included hours",
+            "description": "Total executions reaching a terminal state in the window",
             "example": 100
           },
           "until": {
@@ -34680,9 +34396,9 @@
         "type": "string",
         "enum": [
           "raw_only",
-          "summary_only",
-          "summary_plus_raw",
-          "cache_rawfallback"
+          "aggregate_only",
+          "aggregate_plus_tail",
+          "raw_only_fallback"
         ]
       },
       "GetPackDependenciesRequest": {
@@ -35949,46 +35665,6 @@
           }
         }
       },
-      "MaintenanceJob": {
-        "type": "string",
-        "enum": [
-          "partition",
-          "summary",
-          "retention"
-        ]
-      },
-      "MaintenanceScheduleStatus": {
-        "type": "object",
-        "required": [
-          "job",
-          "next_due"
-        ],
-        "properties": {
-          "job": {
-            "$ref": "#/components/schemas/MaintenanceJob"
-          },
-          "last_success": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
-          "next_due": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "ManagedTable": {
-        "type": "string",
-        "description": "Daily UTC RANGE parents managed by the supervisor.",
-        "enum": [
-          "event",
-          "execution_history",
-          "audit_event"
-        ]
-      },
       "ManagementOriginKind": {
         "type": "string",
         "enum": [
@@ -35996,122 +35672,6 @@
           "pack",
           "ad_hoc"
         ]
-      },
-      "NativeMaintenanceConfig": {
-        "type": "object",
-        "description": "Bounded native partition and hourly-summary maintenance.",
-        "properties": {
-          "default_repair_row_limit": {
-            "type": "integer",
-            "format": "int64",
-            "default": 1000
-          },
-          "enabled": {
-            "type": "boolean",
-            "default": true
-          },
-          "lock_timeout_milliseconds": {
-            "type": "integer",
-            "format": "int64",
-            "default": 250,
-            "minimum": 0
-          },
-          "max_partition_cycle_milliseconds": {
-            "type": "integer",
-            "format": "int64",
-            "default": 5000,
-            "minimum": 0
-          },
-          "max_partition_operations_per_cycle": {
-            "type": "integer",
-            "format": "int64",
-            "default": 32
-          },
-          "max_summary_buckets_per_cycle": {
-            "type": "integer",
-            "format": "int64",
-            "default": 128
-          },
-          "max_summary_cycle_milliseconds": {
-            "type": "integer",
-            "format": "int64",
-            "default": 5000,
-            "minimum": 0
-          },
-          "max_summary_invalidations_per_bucket": {
-            "type": "integer",
-            "format": "int64",
-            "default": 10000
-          },
-          "operation_timeout_milliseconds": {
-            "type": "integer",
-            "format": "int64",
-            "default": 1000,
-            "minimum": 0
-          },
-          "partition_interval_seconds": {
-            "type": "integer",
-            "format": "int64",
-            "default": 3600,
-            "minimum": 0
-          },
-          "partition_lookahead_days": {
-            "type": "integer",
-            "format": "int64",
-            "default": 7
-          },
-          "summary_bootstrap_hours": {
-            "type": "integer",
-            "format": "int64",
-            "default": 24
-          },
-          "summary_interval_seconds": {
-            "type": "integer",
-            "format": "int64",
-            "default": 300,
-            "minimum": 0
-          }
-        }
-      },
-      "NativeMaintenanceStatus": {
-        "type": "object",
-        "required": [
-          "observed_at",
-          "enabled",
-          "partitions",
-          "summaries",
-          "schedule"
-        ],
-        "properties": {
-          "enabled": {
-            "type": "boolean",
-            "description": "Persisted native-maintenance switch, independent of row retention."
-          },
-          "observed_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "UTC time at which the API began collecting these observations."
-          },
-          "partitions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PartitionStatus"
-            }
-          },
-          "schedule": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MaintenanceScheduleStatus"
-            }
-          },
-          "summaries": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SummaryStatus"
-            },
-            "description": "Coverage extrema do not imply continuous coverage. Dirty hours use raw reads."
-          }
-        }
       },
       "NodeJsEnvironment": {
         "type": "object",
@@ -39982,49 +39542,6 @@
           }
         }
       },
-      "PartitionStatus": {
-        "type": "object",
-        "description": "Catalog-verified status. DEFAULT counts stop at repair_cap + 1; they are\nlower bounds when default_count_exact is false, never full backlog scans.",
-        "required": [
-          "parent",
-          "registered_partitions",
-          "future_partitions",
-          "missing_future_partitions",
-          "default_rows_at_least",
-          "default_count_exact"
-        ],
-        "properties": {
-          "default_count_exact": {
-            "type": "boolean"
-          },
-          "default_rows_at_least": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "future_partitions": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "missing_future_partitions": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "oldest_default_day": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
-          "parent": {
-            "$ref": "#/components/schemas/ManagedTable"
-          },
-          "registered_partitions": {
-            "type": "integer",
-            "format": "int64"
-          }
-        }
-      },
       "PermissionAssignmentResponse": {
         "type": "object",
         "required": [
@@ -41200,7 +40717,7 @@
           "batch_size": {
             "type": "integer",
             "format": "int64",
-            "description": "Maximum rows to delete in each committed batch."
+            "description": "Maximum rows to delete per target per cycle for regular tables."
           },
           "cache_retention": {
             "$ref": "#/components/schemas/CacheRetentionConfig",
@@ -41214,20 +40731,11 @@
           },
           "dry_run": {
             "type": "boolean",
-            "description": "Report candidate rows without deleting them."
+            "description": "Report candidates without deleting rows/chunks."
           },
           "enabled": {
             "type": "boolean",
             "description": "Enable runtime row retention globally."
-          },
-          "max_batches_per_target": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Maximum committed batches per target per cycle. Each target can delete\nat most batch_size * max_batches_per_target rows per cycle."
-          },
-          "native_maintenance": {
-            "$ref": "#/components/schemas/NativeMaintenanceConfig",
-            "description": "Independent native partition/summary jobs. Persisted and reloaded with\nretention settings; raw reads remain available during materialization."
           },
           "targets": {
             "$ref": "#/components/schemas/RetentionTargetsConfig",
@@ -41264,6 +40772,9 @@
         "description": "Per-table runtime retention targets.",
         "properties": {
           "audit_events": {
+            "$ref": "#/components/schemas/RetentionTargetConfig"
+          },
+          "continuous_aggregates": {
             "$ref": "#/components/schemas/RetentionTargetConfig"
           },
           "enforcements": {
@@ -42393,78 +41904,6 @@
             "type": "boolean",
             "description": "Success indicator",
             "example": true
-          }
-        }
-      },
-      "SummaryKind": {
-        "type": "string",
-        "description": "Independent hourly materializations. Enum order is also the state-lock order.",
-        "enum": [
-          "execution_status",
-          "execution_creation",
-          "event_volume",
-          "worker_status"
-        ]
-      },
-      "SummaryStatus": {
-        "type": "object",
-        "required": [
-          "kind",
-          "coverage_hours",
-          "dirty_notifications",
-          "dirty_hours"
-        ],
-        "properties": {
-          "coverage_hours": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "covered_since": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time",
-            "description": "Extrema only. They do not assert continuous coverage."
-          },
-          "covered_until": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
-          "dirty_hours": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "dirty_notifications": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "kind": {
-            "$ref": "#/components/schemas/SummaryKind"
-          },
-          "latest_success": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
-          "oldest_dirty_bucket": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
-          "oldest_notification": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
           }
         }
       },
@@ -45968,10 +45407,6 @@
     {
       "name": "workers",
       "description": "Worker inventory and load endpoints"
-    },
-    {
-      "name": "retention",
-      "description": "Runtime retention and native maintenance settings and status"
     },
     {
       "name": "queues",
