@@ -17,20 +17,15 @@ Attune provides native Linux packages for Debian/Ubuntu (`.deb`), Fedora/RHEL (`
 | `attune-cli` | `attune` CLI + `attune-mcp` MCP server | None (static binary) |
 | `attune-agent` | `attune-agent` + `attune-sensor-agent` | None (static binary) |
 
-> **Note**: The server packages (`attune-api`, `attune-executor`, `attune-notifier`) require PostgreSQL 16+ with TimescaleDB and RabbitMQ 3.12+ as external services. These are **not** pulled in as package dependencies — install and configure them separately.
+The server packages require stock PostgreSQL 16+ and RabbitMQ 3.12+ as external services. TimescaleDB is not required. Install and configure the database and message queue separately.
 
 ## Prerequisites
 
-The server packages depend on PostgreSQL 16 with TimescaleDB and RabbitMQ. Since TimescaleDB and RabbitMQ are not in default OS repositories, add their package sources **before** installing Attune.
+Configure package sources that supply the required stock PostgreSQL and RabbitMQ versions before installing Attune. Follow the [PostgreSQL Linux installation instructions](https://www.postgresql.org/download/linux/) and RabbitMQ's [Debian/Ubuntu](https://www.rabbitmq.com/docs/install-debian) or [Fedora/RHEL](https://www.rabbitmq.com/docs/install-rpm) instructions.
 
 ### Debian / Ubuntu
 
 ```bash
-# Add TimescaleDB repository
-echo "deb https://packagecloud.io/timescale/timescaledb/debian/ $(lsb_release -cs) main" \
-  | sudo tee /etc/apt/sources.list.d/timescaledb.list
-curl -fsSL https://packagecloud.io/timescale/timescaledb/gpgkey | sudo gpg --dearmor -o /etc/apt/keyrings/timescaledb.gpg
-
 # Add RabbitMQ repository (via Cloudsmith)
 # See https://www.rabbitmq.com/docs/install-debian for the latest instructions
 curl -1sLf 'https://keys.openpgp.org/vks/v1/by-fingerprint/0A9AF2115F4687BD29803A206B73A36E6026DFCA' \
@@ -44,15 +39,6 @@ sudo apt update
 ### Fedora / RHEL
 
 ```bash
-# Add TimescaleDB repository
-sudo tee /etc/yum.repos.d/timescaledb.repo <<EOF
-[timescaledb]
-name=TimescaleDB
-baseurl=https://packagecloud.io/timescale/timescaledb/el/\$releasever/\$basearch
-gpgcheck=0
-enabled=1
-EOF
-
 # Add RabbitMQ repository
 # See https://www.rabbitmq.com/docs/install-rpm for the latest instructions
 curl -1sLf 'https://packagecloud.io/rabbitmq/rabbitmq-server/gpgkey' | sudo rpm --import -
@@ -67,12 +53,7 @@ EOF
 
 ### Arch Linux
 
-TimescaleDB is available from the AUR (`timescaledb`). RabbitMQ is in the official `extra` repository.
-
-```bash
-# Install an AUR helper if needed (e.g., yay)
-yay -S timescaledb
-```
+PostgreSQL and RabbitMQ are available in the official repositories. Do not install a TimescaleDB extension for Attune.
 
 ## Debian / Ubuntu (apt)
 
@@ -210,24 +191,20 @@ and all administrator values are preserved.
 
 ### 3. Initialize the database
 
-Create the database and run migrations:
+For a fresh installation, create an empty stock PostgreSQL database and run migrations. These migrations do not convert a populated TimescaleDB database or an older pre-production schema. Preserve existing data and backups; do not reuse an old data directory as a fresh database.
 
 ```bash
 # Create the PostgreSQL database (adjust credentials as needed)
 sudo -u postgres createuser attune
 sudo -u postgres createdb -O attune attune
 
-# Enable TimescaleDB extension
-sudo -u postgres psql -d attune -c "CREATE EXTENSION IF NOT EXISTS timescaledb;"
-
 # Apply the migrations embedded in the API package, then exit
 sudo -u attune sh -c 'set -a; . /etc/attune/environment; set +a; exec /usr/bin/attune-api --config /etc/attune/attune.yaml --migrate'
 ```
 
-For a v0.2.1 upgrade from a database with legacy SQLx checksums, this
-`attune-api --migrate` step is required once. Its embedded runner bridges the
-released checksums before SQLx validation; standalone `sqlx migrate run` cannot
-perform that pre-validation bridge.
+Both migration runners enforce recorded checksums. A mismatch needs a separately
+designed conversion or an explicitly approved reset of a disposable development
+database, not a checksum rewrite. See [Deployment Overview](/operations/deployment/#fresh-installs-and-existing-databases).
 
 ### 4. Start and enable services
 

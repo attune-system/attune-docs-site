@@ -67,7 +67,7 @@ Errors include an error message/code and appropriate HTTP status.
 | Runtimes and workers | Runtime definitions, worker status, health fields, and cordon operations. |
 | Permissions and identities | Identities, permission sets, grants, role assignments. |
 | Audit events | Security/compliance event queries. |
-| Analytics/history | TimescaleDB rollups and entity history. |
+| Analytics/history | PostgreSQL hourly summaries with raw fallback, and trigger-maintained entity history. |
 | Agent | Binary download and agent info. |
 
 `POST /api/v1/packs/install` accepts optional `registry_id` to resolve a pack

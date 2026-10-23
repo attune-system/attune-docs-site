@@ -1,0 +1,52 @@
+/* Adapted from astro-mermaid. See mermaid.LICENSE. */
+pre.mermaid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2rem 0;
+  padding: 1rem;
+  background-color: transparent;
+  border: none;
+  overflow: auto;
+  min-height: 200px;
+  position: relative;
+}
+
+pre.mermaid:not([data-processed]) {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: mermaid-shimmer 1.5s infinite;
+}
+
+[data-theme="dark"] pre.mermaid:not([data-processed]) {
+  background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+  background-size: 200% 100%;
+}
+
+@keyframes mermaid-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+pre.mermaid[data-processed] {
+  animation: none;
+  background: transparent;
+  min-height: auto;
+  border-radius: 0.5rem;
+}
+
+pre.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (prefers-color-scheme: dark) {
+  pre.mermaid[data-processed] { background-color: rgba(255, 255, 255, 0.02); }
+}
+
+@media (prefers-color-scheme: light) {
+  pre.mermaid[data-processed] { background-color: rgba(0, 0, 0, 0.02); }
+}
+
+[data-theme="dark"] pre.mermaid[data-processed] { background-color: rgba(255, 255, 255, 0.02); }
+[data-theme="light"] pre.mermaid[data-processed] { background-color: rgba(0, 0, 0, 0.02); }

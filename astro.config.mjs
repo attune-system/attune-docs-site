@@ -1,6 +1,6 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
-import mermaid from "astro-mermaid";
+import mermaid from "./src/integrations/mermaid.mjs";
 import { resolveSiteLinks } from "./src/config/siteLinks";
 
 const { slackInviteUrl, supportUrl } = resolveSiteLinks(process.env);
@@ -9,7 +9,7 @@ export default defineConfig({
   site: "https://docs.attunedev.org",
   output: "static",
   integrations: [
-    mermaid({ autoTheme: true, enableLog: false }),
+    mermaid(),
     starlight({
       title: "Attune Docs",
       description: "Learn how to build, run, and operate automation with Attune.",

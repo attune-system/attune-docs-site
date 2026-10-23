@@ -9,7 +9,7 @@ An audit event records a security-relevant or operator-relevant fact about Attun
 
 ## PostgreSQL representation
 
-`audit_event` is a TimescaleDB hypertable partitioned on `created` with one-day chunks. Its primary key is `(id, created)`. The [audit-log migration](https://github.com/attune-system/attune/blob/main/migrations/20250101000013_audit_log.sql) defines seven categories and three outcomes.
+`audit_event` is a native PostgreSQL RANGE-partitioned parent on `created`, with daily UTC leaves and a DEFAULT partition. Its primary key is `(id, created)`. The [audit-log migration](https://github.com/attune-system/attune/blob/main/migrations/20250101000013_audit_log.sql) creates the parent and DEFAULT partition and defines seven categories and three outcomes. The [native partition migration](https://github.com/attune-system/attune/blob/main/migrations/20261006000001_native_partitions.sql) adds daily leaves.
 
 | Group | Fields |
 | --- | --- |
@@ -21,9 +21,9 @@ An audit event records a security-relevant or operator-relevant fact about Attun
 
 Categories are `api`, `auth`, `rbac`, `secret`, `admin`, `execution`, and `pack`. Outcomes are `success`, `failure`, and `denied`. Event types are dotted strings such as `auth.login.success` or `execution.completed`; the [audit module](https://github.com/attune-system/attune/blob/main/crates/common/src/audit/mod.rs) centralizes the known constants and Rust enums.
 
-Actor and resource IDs are plain `BIGINT` snapshots without foreign keys. That is a retention choice: identity or resource deletion must not erase or rewrite the audit record. `actor_login` and `resource_ref` preserve readable names. Because `audit_event` is a hypertable, other tables also cannot treat `audit_event(id)` as a normal foreign-key target. The database key includes `created`, although the repository supports the uncommon all-chunk lookup by `id` alone.
+Actor and resource IDs are plain `BIGINT` snapshots without foreign keys. That is a retention choice: identity or resource deletion must not erase or rewrite the audit record. `actor_login` and `resource_ref` preserve readable names. The database key includes `created` and does not enforce global uniqueness of `id` alone, although the repository supports the uncommon all-partition lookup by `id`. This is a key constraint, not a blanket PostgreSQL restriction on foreign keys to partitioned tables.
 
-There is no secondary history table. Audit events are append-only records. PostgreSQL compresses chunks older than seven days, segmented by category and actor identity.
+There is no secondary history table. Audit events are append-only records. The schema has no TimescaleDB compression policy.
 
 ## Writers and delivery guarantees
 
@@ -33,7 +33,7 @@ flowchart LR
     AUTH[Auth and RBAC] --> EM
     ADMIN[Admin and maintenance code] --> EM
     EM --> BW[Background batch writer]
-    BW --> A[(audit_event hypertable)]
+    BW --> A[(audit_event RANGE parent)]
     X[(execution status)] --> DBT[Database trigger]
     DBT --> A
 ```
@@ -54,6 +54,6 @@ The [audit repository](https://github.com/attune-system/attune/blob/main/crates/
 
 ## Retention and caveats
 
-The supervisor owns audit retention. The default is 90 days, longer than the 30-day default for operational events and execution history. The [retention repository](https://github.com/attune-system/attune/blob/main/crates/common/src/repositories/retention.rs) drops complete hypertable chunks older than the configured `created` cutoff. Runtime configuration can change the age or keep records forever by setting the target age to `null`. See [Supervisor](/operations/supervisor/).
+The supervisor owns audit retention. The default is 90 days, longer than the 30-day default for operational events and execution history. With native maintenance enabled, the [retention repository](https://github.com/attune-system/attune/blob/main/crates/common/src/repositories/retention.rs) drops fully expired daily leaves. It deletes expired boundary-day and DEFAULT rows in bounded batches through the parent. Runtime configuration can change the age or keep records forever by setting the target age to `null`. See [Supervisor](/operations/supervisor/).
 
 Do not describe this store as lossless. Database-triggered execution records are transactional, but emitter-based records can be lost during shutdown, channel failure, or database failure. Retention also removes records by policy. Deployments with compliance requirements must account for those guarantees, database backups, and access controls rather than infer permanence from the term "audit."

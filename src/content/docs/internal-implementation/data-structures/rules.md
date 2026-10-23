@@ -40,7 +40,7 @@ sequenceDiagram
 
 An event normally fans out to every enabled rule with the same trigger. Sensor or execution emission can target a specific positive numeric rule instance, which suppresses broadcast matching. Conditions may be empty, an expression over event context, or an array of supported comparisons. Templates use `event.payload.*`; `trigger.payload.*` is legacy.
 
-The `enforcement` row snapshots `rule_ref`, `trigger_ref`, rendered config, payload, condition form, and status. A partial unique index on `(rule, event)` prevents duplicate enforcements while both IDs are present. Status starts at `created` and resolves to `processed` or `disabled`. `enforcement.event` is a plain `BIGINT`, because `event` is a TimescaleDB hypertable and cannot be a foreign-key target.
+The `enforcement` row snapshots `rule_ref`, `trigger_ref`, rendered config, payload, condition form, and status. A partial unique index on `(rule, event)` prevents duplicate enforcements while both IDs are present. Status starts at `created` and resolves to `processed` or `disabled`. `enforcement.event` is a plain `BIGINT` so event retention can remove source rows independently. The native partitioned event key is `(id, created)`, not a unique `id` alone.
 
 `trace_tag_template` can derive correlation from event, pack, and system context. Without one, the executor defaults rule-triggered work to `<trigger_ref>.<event_id>`. The resulting trace tag follows the enforcement and execution so the trace report can join activity across services.
 
@@ -54,7 +54,7 @@ Rule create, update, enable, disable, and delete operations publish lifecycle no
 
 The numeric action or trigger link can be null while its ref remains. Reads and audit views can still describe such a rule, but execution requires the current referenced definitions.
 
-Event, enforcement, and execution retention are independent. An enforcement can retain a plain event ID after event retention drops the corresponding hypertable row. Other operational records also keep plain execution or enforcement IDs so they can outlive those rows. Use denormalized refs and trace tags for durable identification rather than assuming every historical join succeeds.
+Event, enforcement, and execution retention are independent. An enforcement can retain a plain event ID after event retention removes the corresponding row or daily partition. Other operational records also keep plain execution or enforcement IDs so they can outlive those rows. Use denormalized refs and trace tags for durable identification rather than assuming every historical join succeeds.
 
 Reference visibility is a pack-to-pack authoring rule. It does not replace RBAC checks on rule API operations or execution permissions.
 

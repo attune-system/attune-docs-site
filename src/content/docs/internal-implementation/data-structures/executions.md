@@ -9,7 +9,7 @@ An execution is one attempt to run an action. Manual requests, rule enforcements
 
 ## PostgreSQL representation
 
-The current `execution` table is an ordinary PostgreSQL table, not a TimescaleDB hypertable. The [execution migration](https://github.com/attune-system/attune/blob/main/migrations/20250101000005_execution_and_operations.sql) defines the row, its indexes, and its foreign keys. Keeping it relational permits self-referencing hierarchy keys, workflow cascades, inquiry ownership, and uniqueness constraints used for duplicate delivery.
+The current `execution` table is an ordinary PostgreSQL table. The [execution migration](https://github.com/attune-system/attune/blob/main/migrations/20250101000005_execution_and_operations.sql) defines the row, its indexes, its foreign keys, and the uniqueness constraints used for duplicate delivery. Selected runtime lineage fields remain plain IDs for independent retention.
 
 | Column group | Important fields |
 | --- | --- |
@@ -21,7 +21,7 @@ The current `execution` table is an ordinary PostgreSQL table, not a TimescaleDB
 | Correlation | immutable `trace_tag` and workflow task metadata |
 | Retry chain | `retry_count`, `max_retries`, `retry_reason`, `original_execution` |
 
-`action`, `executor`, and `worker` use nullable foreign keys with `ON DELETE SET NULL`. `parent` and `original_execution` self-reference `execution(id)`. `enforcement` also uses `ON DELETE SET NULL`. These links do not dangle under normal foreign-key operation. Other operational tables intentionally use plain execution IDs where independent retention matters. For example, `artifact_version.execution` has no foreign key, so an artifact version can outlive its execution.
+`action`, `executor`, and `worker` use nullable foreign keys with `ON DELETE SET NULL`. `original_execution` also references `execution(id)` with `ON DELETE SET NULL`. In contrast, `parent` and `enforcement` are plain `BIGINT` values without foreign keys and may dangle after independent retention. Other operational tables use the same deliberate policy. For example, `artifact_version.execution` has no foreign key, so an artifact version can outlive its execution.
 
 The Rust [Execution model and repository](https://github.com/attune-system/attune/blob/main/crates/common/src/repositories/execution.rs) use an explicit column list because the database-only `workflow_def` column is absent from the public model. Do not use `SELECT *` for this row.
 
@@ -60,18 +60,22 @@ Cancellation is cooperative for running work. The [execution API](https://github
 
 A workflow has one parent execution plus one `workflow_execution` row containing task sets, variables, the task graph, pause state, and orchestration status. Child actions are ordinary executions whose `parent` points to the workflow execution row's parent execution. Their `workflow_task` JSONB names the workflow state record, task, item index or batch, retry counters, timing, and triggering predecessor. `workflow_task_dispatch` claims `(workflow_execution, task_name, task_index)` before child creation, which prevents duplicate dispatch across executor replicas. The [workflow schema migration](https://github.com/attune-system/attune/blob/main/migrations/20250101000006_workflow_system.sql) defines these supporting records. See [Workflows](/pack-development/workflows/) for authoring behavior.
 
-Inquiries are one-to-one supporting records for executions waiting on human input. `inquiry.execution` has `ON DELETE CASCADE`; statuses are `pending`, `responded`, `timeout`, and `cancelled`. The executor creates inquiries from action results, resumes work after response messages, and checks timeouts. Inquiry retention separately deletes terminal rows after their configured age.
+Inquiries support human input with statuses `pending`, `responded`, `timeout`, and `cancelled`. `inquiry.created_by_execution` is a plain `BIGINT` without a foreign key. The [workflow wait migration](https://github.com/attune-system/attune/blob/main/migrations/20260919000001_workflow_task_waits.sql) drops the original creator FK and one-per-execution index. Workflow-scoped idempotency instead uses workflow state, task name, attempt family, and purpose.
+
+The executor resumes waiting work after response messages and checks timeouts. Inquiry retention separately deletes terminal rows after their configured age, and an inquiry can outlive its creator execution. The separate `inquiry.workflow_execution` relationship retains `ON DELETE CASCADE` to workflow state.
 
 Retries create new execution rows rather than resetting failed rows. `original_execution` points to the first attempt, while `retry_count`, `max_retries`, and `retry_reason` identify the attempt. Workflow retries also update the child `workflow_task` metadata and use the latest attempt per item when deciding task state. This preserves each attempt's result and history.
 
 ## History and artifacts
 
-The `execution_history` table is a one-day-chunk TimescaleDB hypertable populated only by the `record_execution_history()` database trigger. It stores insert and delete markers plus field-level updates. Tracked updates include status, result, executor, worker, workflow metadata, environment variables, trace tag, and start time. Large result values appear as `{digest, size, type}` summaries, not full output. The [history migration](https://github.com/attune-system/attune/blob/main/migrations/20250101000009_timescaledb_history.sql) and [trace-tag migration](https://github.com/attune-system/attune/blob/main/migrations/20250101000015_trace_tags.sql) define the current trigger.
+The `execution_history` table is a native PostgreSQL RANGE-partitioned parent on `time`, with daily UTC leaves and a DEFAULT partition, populated by the `record_execution_history()` database trigger. It stores insert and delete markers plus field-level updates. History records have no public history-ID contract. Tracked updates include status, result, executor, worker, workflow metadata, environment variables, trace tag, and start time. Large result values appear as `{digest, size, type}` summaries, not full output.
+
+The [entity history migration](https://github.com/attune-system/attune/blob/main/migrations/20250101000009_timescaledb_history.sql) creates the parent and DEFAULT partition; its historical filename does not imply a TimescaleDB dependency. The [trace-tag migration](https://github.com/attune-system/attune/blob/main/migrations/20250101000015_trace_tags.sql) updates the trigger, and the [native partition migration](https://github.com/attune-system/attune/blob/main/migrations/20261006000001_native_partitions.sql) adds daily leaves.
 
 Execution artifacts are separate `artifact` and `artifact_version` records. Versions may hold bytes, JSON, or a file path, and their plain `execution` ID can outlive the execution row. File-backed version rows can change during creation and finalization, but their version number and finalized content remain stable. Action output logs use artifact retention settings separate from execution-row retention. See [Artifacts](/administration/artifacts/).
 
 ## Retention and caveats
 
-The supervisor defaults both executions and execution history to 30 days. It batch-deletes only terminal execution rows whose `updated` time is older than the cutoff. It drops old history chunks by `time`. The two targets are independent, so either side can disappear first after configuration changes. Foreign-key cascades remove workflow state and inquiries when an execution is deleted; plain references such as artifact version IDs may remain. [Supervisor](/operations/supervisor/) lists the current defaults and corrective actions.
+The supervisor defaults both executions and execution history to 30 days. It batch-deletes only eligible terminal execution rows whose `updated` time is older than the cutoff. With native maintenance enabled, it drops fully expired daily history leaves by `time`; it deletes expired boundary-day and DEFAULT rows in bounded batches. The targets are independent, so either side can disappear first after configuration changes. Deleting an execution does not cascade through the plain `workflow_execution.execution` or `inquiry.created_by_execution` links. Those records and artifact versions can retain a missing execution's ID. Other FKs still apply, including `workflow_task_dispatch.execution_id`, which cascades when its child execution is deleted. [Supervisor](/operations/supervisor/) lists the current defaults and corrective actions.
 
 History is selective, not a complete row archive. The live `result` is lost with the execution, and its history keeps only a digest. Code that needs durable output must write an artifact rather than rely on execution retention.

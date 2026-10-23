@@ -11,17 +11,23 @@ Use the public Docker distribution to start Attune locally and perform the first
 
 ## Install the Docker distribution
 
-Install Git, OpenSSL, Docker Engine, and Docker Compose v2. Then clone the [`attune-docker` repository](https://github.com/attune-system/attune-docker) and create its local environment file:
+Install Git, Python 3, OpenSSL, Docker Engine, and Docker Compose v2. Then clone the [`attune-docker` repository](https://github.com/attune-system/attune-docker).
+
+The current checkout requires an explicitly verified platform release with stock PostgreSQL migrations and the ordinary authenticated `pack_publication` contract, revision `authenticated-pack-publication-1`. It also needs matching core-pack publisher images and a provisioned deployment integration token with registrar grants. The separate managed-runtime bootstrap gate need not be enabled for authenticated publication.
+
+A compatible published image set has not yet been verified for these instructions. These commands are preparation steps, not evidence of a runnable release. Follow the distribution's [image selection requirements](https://github.com/attune-system/attune-docker#required-platform-image-selection) before replacing the tag placeholder:
 
 ```bash
 git clone https://github.com/attune-system/attune-docker.git attune-docker
 cd attune-docker
-./scripts/create-env.sh
+ATTUNE_IMAGE_TAG='<verified-compatible-platform-tag>' ./scripts/create-env.sh
+# Configure matching core pins and the provisioned deployment token in .env.
+python3 scripts/check-image-selection.py --env-file .env
 docker compose pull
 docker compose up -d
 ```
 
-The distribution pulls published images from `ghcr.io/attune-system`. It does not build Attune from source. The stack includes PostgreSQL, RabbitMQ, initialization jobs, the API, the executor, the supervisor, action workers, a sensor worker, the notifier, and the web UI.
+The distribution pulls selected images from `ghcr.io/attune-system`. It does not build Attune from source. The stack includes stock PostgreSQL 18, RabbitMQ, initialization jobs, the API, the executor, the supervisor, action workers, a sensor worker, the notifier, and the web UI. Fresh PostgreSQL volumes do not convert existing TimescaleDB data. See [Deployment Overview](/operations/deployment/#fresh-installs-and-existing-databases) before updating an existing installation.
 
 Open one of these local endpoints:
 

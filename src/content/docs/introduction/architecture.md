@@ -1,11 +1,11 @@
 ---
 title: "Architecture"
-description: "Attune is a distributed service platform built around PostgreSQL/TimescaleDB, RabbitMQ, and independently scalable Rust services."
+description: "Attune is a distributed service platform built around stock PostgreSQL, RabbitMQ, and independently scalable Rust services."
 sidebar:
   label: "Architecture"
   order: 3
 ---
-Attune is a distributed service platform built around PostgreSQL/TimescaleDB, RabbitMQ, and independently scalable Rust services.
+Attune is a distributed service platform built around stock PostgreSQL 16+, RabbitMQ, and independently scalable Rust services. Compose and CI use PostgreSQL 18. No TimescaleDB extension is required.
 
 ## Service interaction diagram
 
@@ -29,7 +29,7 @@ flowchart TD
 
     subgraph Infrastructure
         direction LR
-        PG[("PostgreSQL<br/>TimescaleDB")]
+        PG[("PostgreSQL 16+")]
         RMQ{{"RabbitMQ"}}
         Vol[/"Shared<br/>Volumes"\]
     end
@@ -119,9 +119,10 @@ flowchart TD
 
 | Component | Use |
 | --- | --- |
-| PostgreSQL 16+ with TimescaleDB | Primary data store, event and history hypertables, audit data, workflow/queue state, and LISTEN/NOTIFY. |
+| Stock PostgreSQL 16+ | Primary data store, native daily partitions for events, execution history, and audit data, workflow/queue state, and LISTEN/NOTIFY. |
 | RabbitMQ 3.12+ | Asynchronous work dispatch between API, executor, worker, and sensor services. |
-| Shared volumes | Pack files, runtime environments, artifacts, agent binaries, and service logs. Optional for workers/sensors - see [Standalone Workers and Sensors](/operations/standalone-workers-and-sensors/). |
+| Durable byte storage | A shared filesystem or configured S3/GCS backend stores immutable pack archives and object-backed artifact/log content. Shared-file artifacts use the artifact volume. See [Backup and Recovery](/operations/backup-and-recovery/). |
+| Runtime storage | Workers need writable runtime environments and local pack materialization. Shared volumes are optional for standalone workers and sensors; see [Standalone Workers and Sensors](/operations/standalone-workers-and-sensors/). |
 
 ## Runtime flow
 
@@ -212,13 +213,17 @@ sequenceDiagram
 ## Data model highlights
 
 - IDs are `BIGINT`/`i64`.
-- `event`, `execution_history`, `worker_history`, and `audit_event` are TimescaleDB hypertables; `execution` and `enforcement` remain regular mutable tables.
-- Historical execution rows preserve text refs where possible; references to hypertables are plain `BIGINT` rather than foreign keys.
+- `event`, `execution_history`, and `audit_event` are native daily UTC RANGE-partitioned parents on `created`, `time`, and `created`, each with a DEFAULT partition. `event` and `audit_event` have composite primary keys `(id, created)`, not globally unique `id` constraints.
+- `execution`, `enforcement`, `worker_history`, and `sensor_process_history` remain ordinary PostgreSQL tables.
+- Historical rows preserve text refs where possible. Selected runtime links, including `execution.parent`, `execution.enforcement`, `workflow_execution.execution`, and `inquiry.created_by_execution`, are plain `BIGINT` values and may dangle after independent retention. Other relationships retain their foreign keys.
+- Analytics combine clean, completed hourly summaries with raw queries for dirty hours, coverage gaps, and partial hours. Summary retention follows the raw source.
 - Entity history is append-only for mutable execution and worker fields.
 - Worker cordon metadata records operator intent separately from observed worker status.
 - Managed sensor process live state is stored in `sensor_process`; changes are mirrored to `sensor_process_history`.
-- Artifacts split metadata from immutable versions; file artifacts are stored on the shared artifact volume.
+- Artifacts split database metadata from content. Content uses a shared artifact volume or immutable objects in the configured filesystem, S3, or GCS backend, depending on transport.
 - Packs own most declarative components and can be system/global or user-created.
+
+The [PostgreSQL-only deployment contract](https://github.com/attune-system/attune/blob/main/docs/deployment/postgresql-only.md) and [migrations](https://github.com/attune-system/attune/tree/main/migrations) describe the current schema and independent-retention rules.
 
 ## Worker scheduling
 

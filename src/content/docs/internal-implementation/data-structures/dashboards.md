@@ -47,6 +47,8 @@ API and web-editor creation sets `is_adhoc = true` and records the creating iden
 
 The API validates the spec before persistence. Preview validates and evaluates an unsaved document. Data execution indexes filters, data sources, and card references, then dispatches source-specific repository queries. Each source applies its own RBAC and ref constraints. Reading a dashboard never grants access to the events, executions, keys, queues, workers, or sensors referenced by its sources.
 
+History-based analytics use ordinary PostgreSQL hourly summary tables for clean, completed hours and timestamp-bounded raw queries for dirty hours, coverage gaps, and partial hours. Summaries do not outlive raw-source retention. Dashboard `execution_count` and `execution_timeseries` count terminal history transitions, including repeated terminal outcomes from retries, rather than distinct execution rows. See the [PostgreSQL analytics contract](https://github.com/attune-system/attune/blob/main/docs/deployment/postgresql-only.md#hourly-summaries-over-retained-raw-records) for summary tables and coverage rules.
+
 The web application routes `/dashboards/new` and `/dashboards/:ref/edit` to the dashboard editor. The normal dashboard page resolves and renders the selected stored document.
 
 ## Caveats

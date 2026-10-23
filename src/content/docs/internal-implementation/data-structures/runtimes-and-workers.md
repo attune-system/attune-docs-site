@@ -43,7 +43,7 @@ A worker registers on startup and updates `last_heartbeat`. The executor filters
 
 Observed health and operator intent are separate. `status` and `last_heartbeat` describe the worker's current service state. `cordoned`, `cordon_reason`, `cordoned_by`, and `cordoned_at` make an otherwise live worker unschedulable. The worker API exposes list and detail reads plus cordon and uncordon operations; workers own registration and heartbeat updates.
 
-The history trigger records worker inserts, updates, and deletes in `worker_history`, a TimescaleDB hypertable. This history is important because heartbeat, status, capability, and cordon changes overwrite the current row.
+The history trigger records worker inserts, updates, and deletes in `worker_history`, an ordinary PostgreSQL table, not a daily partitioned parent. This history is important because heartbeat, status, capability, and cordon changes overwrite the current row. History records have no public history-ID contract. Worker-status analytics combine clean, completed hours from `worker_status_hourly_summary` with raw history for dirty hours, gaps, and partial hours.
 
 ## Caveats
 

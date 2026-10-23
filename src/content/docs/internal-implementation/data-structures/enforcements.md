@@ -9,7 +9,7 @@ An enforcement records that one rule matched one event and captures the action p
 
 ## PostgreSQL representation
 
-The current `enforcement` table is an ordinary PostgreSQL table, not a TimescaleDB hypertable. The [event-system migration](https://github.com/attune-system/attune/blob/main/migrations/20250101000004_trigger_sensor_event_rule.sql) defines its columns and indexes. The current HA design keeps it relational so PostgreSQL can enforce idempotency with a partial unique index on `(rule, event)` when both values are present.
+The current `enforcement` table is an ordinary PostgreSQL table. The [event-system migration](https://github.com/attune-system/attune/blob/main/migrations/20250101000004_trigger_sensor_event_rule.sql) defines its columns and indexes. A partial unique index on `(rule, event)` enforces idempotency when both values are present.
 
 | Column | Meaning |
 | --- | --- |
@@ -22,7 +22,7 @@ The current `enforcement` table is an ordinary PostgreSQL table, not a Timescale
 | `condition`, `conditions` | `all` or `any`, plus the condition definitions |
 | `status`, `resolved_at` | Narrow processing lifecycle |
 
-`enforcement.rule` references the regular `rule` table with `ON DELETE SET NULL`. `enforcement.event` cannot reference `event(id)`: `event` is a hypertable whose primary key is `(id, created)`. The plain `BIGINT` can dangle when event retention drops an old chunk. `execution.enforcement`, by contrast, is a normal foreign key because both `enforcement` and `execution` are ordinary tables. Deleting an enforcement sets that execution field to `NULL`.
+`enforcement.rule` references the regular `rule` table with `ON DELETE SET NULL`. `enforcement.event` is a plain `BIGINT` so event retention can remove source rows independently. `event` has a composite `(id, created)` primary key, with no uniqueness constraint on `id` alone. `execution.enforcement` is also a plain `BIGINT`, even though enforcement and execution are ordinary tables. Deleting an enforcement does not clear that execution field. Both links may dangle after independent retention.
 
 There is no `enforcement_history` table. Enforcements make one short transition after insertion, so the live row carries enough state. The `enforcement_volume_hourly` view groups rows directly by `created` and `rule_ref`. Secret action parameters are redacted in `config`; encrypted values live in `execution_secret_value` under the `enforcement_config` entity type.
 
@@ -63,6 +63,6 @@ An enforcement snapshots more than linkage. `payload`, `conditions`, and resolve
 
 ## Retention and caveats
 
-The supervisor retains enforcements for 30 days by default. Unlike event retention, it performs bounded row deletes. The [retention repository](https://github.com/attune-system/attune/blob/main/crates/common/src/repositories/retention.rs) deletes only rows older than the `created` cutoff whose status is not `created`, up to the configured batch size each cycle. An unresolved `created` enforcement is not age-purged. See [Supervisor](/operations/supervisor/) for configuration and lag monitoring.
+The supervisor retains enforcements for 30 days by default. Enforcements use bounded row deletes rather than daily partition drops. The [retention repository](https://github.com/attune-system/attune/blob/main/crates/common/src/repositories/retention.rs) deletes only rows older than the `created` cutoff whose status is not `created`, subject to the configured batch size and per-cycle batch budget. An unresolved `created` enforcement is not age-purged. See [Supervisor](/operations/supervisor/) for configuration and lag monitoring.
 
 Do not model enforcement as a general workflow state machine. Its statuses only describe whether executor intake remains pending, produced an execution path, or was disabled. Execution failure does not move a processed enforcement back to `created`. Retries and cancellation belong to the execution records that follow it.
