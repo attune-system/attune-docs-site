@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.8.0"
+    "version": "0.9.0"
   },
   "servers": [
     {
@@ -1246,6 +1246,105 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Action not found"
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/actions/{ref}/execution-options": {
+      "get": {
+        "tags": [
+          "actions"
+        ],
+        "operationId": "get_execution_options",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "description": "Action reference",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-approved permission selection choices",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Standard API response wrapper",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "action_ref",
+                        "default_permission_set_refs",
+                        "selectable_permission_set_refs",
+                        "authority_source",
+                        "default_selection_available"
+                      ],
+                      "properties": {
+                        "action_ref": {
+                          "type": "string"
+                        },
+                        "authority_source": {
+                          "$ref": "#/components/schemas/ExecutionOptionsAuthoritySource"
+                        },
+                        "default_permission_set_refs": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "default_selection_available": {
+                          "type": "boolean",
+                          "description": "Informational only. Actual creation rechecks admission and revocation."
+                        },
+                        "policy_revision_id": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "format": "int64"
+                        },
+                        "selectable_permission_set_refs": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Optional message"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Action execution is not authorized"
           },
           "404": {
             "description": "Action not found"
@@ -4022,7 +4121,12 @@
           "404": {
             "description": "Artifact not found or not file-backed"
           }
-        }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
       }
     },
     "/api/v1/artifacts/{id}/versions": {
@@ -4030,7 +4134,7 @@
         "tags": [
           "artifacts"
         ],
-        "summary": "List all versions for an artifact (without binary content)",
+        "summary": "List a visibility-filtered page of versions without binary/JSON content.",
         "operationId": "list_versions",
         "parameters": [
           {
@@ -4042,125 +4146,44 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1
+            },
+            "example": 20
           }
         ],
         "responses": {
           "200": {
-            "description": "List of versions",
+            "description": "Visible versions with exact totals",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "description": "Standard API response wrapper",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "description": "Simplified version for list endpoints",
-                        "required": [
-                          "id",
-                          "version",
-                          "created"
-                        ],
-                        "properties": {
-                          "body_state": {
-                            "oneOf": [
-                              {
-                                "type": "null"
-                              },
-                              {
-                                "$ref": "#/components/schemas/ArtifactBodyState"
-                              }
-                            ]
-                          },
-                          "content_type": {
-                            "type": [
-                              "string",
-                              "null"
-                            ],
-                            "description": "MIME content type"
-                          },
-                          "created": {
-                            "type": "string",
-                            "format": "date-time",
-                            "description": "Creation timestamp"
-                          },
-                          "created_by": {
-                            "type": [
-                              "string",
-                              "null"
-                            ],
-                            "description": "Who created this version"
-                          },
-                          "execution": {
-                            "type": [
-                              "integer",
-                              "null"
-                            ],
-                            "format": "int64",
-                            "description": "Execution that produced this version"
-                          },
-                          "file_path": {
-                            "type": [
-                              "string",
-                              "null"
-                            ],
-                            "description": "Relative file path for disk-backed versions"
-                          },
-                          "id": {
-                            "type": "integer",
-                            "format": "int64",
-                            "description": "Version ID"
-                          },
-                          "object_key": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "provider_version": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "sha256": {
-                            "type": [
-                              "string",
-                              "null"
-                            ]
-                          },
-                          "size_bytes": {
-                            "type": [
-                              "integer",
-                              "null"
-                            ],
-                            "format": "int64",
-                            "description": "Size of content in bytes"
-                          },
-                          "version": {
-                            "type": "integer",
-                            "format": "int32",
-                            "description": "Version number"
-                          }
-                        }
-                      }
-                    },
-                    "message": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "description": "Optional message"
-                    }
-                  }
+                  "$ref": "#/components/schemas/PaginatedResponse_ArtifactVersionSummary"
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid pagination"
           },
           "404": {
             "description": "Artifact not found"
@@ -6286,6 +6309,123 @@
           },
           "500": {
             "description": "Cache scan failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cache/namespaces/{namespace}/entries/apply": {
+      "post": {
+        "tags": [
+          "caches"
+        ],
+        "summary": "Applies one atomic live-cache batch with optimistic concurrency and bounded retries.",
+        "operationId": "apply_live_entries",
+        "parameters": [
+          {
+            "name": "namespace",
+            "in": "path",
+            "description": "Live cache namespace",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyLiveCacheRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Committed batch or identical replay",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplyLiveCacheApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bounded mutation request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Namespace is not writable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CacheForbiddenResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Namespace not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Mode, revision, retry-content or quota conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Mutation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Cache storage is busy",
             "content": {
               "application/json": {
                 "schema": {
@@ -8729,7 +8869,7 @@
         "tags": [
           "artifacts"
         ],
-        "summary": "List all artifacts for a given execution",
+        "summary": "List a disclosure-eligible page of artifacts for a given execution.",
         "operationId": "list_artifacts_by_execution",
         "parameters": [
           {
@@ -8741,112 +8881,60 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1
+            },
+            "example": 20
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Optional type filter, including bounded progress-artifact discovery.",
+            "required": false,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/components/schemas/ArtifactType"
+                }
+              ]
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "List of artifacts for execution",
+            "description": "Eligible artifacts with exact totals",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "description": "Standard API response wrapper",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "description": "Simplified artifact for list endpoints",
-                        "required": [
-                          "id",
-                          "ref",
-                          "type",
-                          "visibility",
-                          "classification",
-                          "scope",
-                          "owner",
-                          "created",
-                          "updated"
-                        ],
-                        "properties": {
-                          "classification": {
-                            "$ref": "#/components/schemas/ArtifactClassification",
-                            "description": "Classification used to distinguish runtime log artifacts from general artifacts."
-                          },
-                          "content_type": {
-                            "type": [
-                              "string",
-                              "null"
-                            ],
-                            "description": "MIME content type"
-                          },
-                          "created": {
-                            "type": "string",
-                            "format": "date-time",
-                            "description": "Creation timestamp"
-                          },
-                          "id": {
-                            "type": "integer",
-                            "format": "int64",
-                            "description": "Artifact ID"
-                          },
-                          "name": {
-                            "type": [
-                              "string",
-                              "null"
-                            ],
-                            "description": "Human-readable name"
-                          },
-                          "owner": {
-                            "type": "string",
-                            "description": "Owner identifier"
-                          },
-                          "ref": {
-                            "type": "string",
-                            "description": "Artifact reference"
-                          },
-                          "scope": {
-                            "$ref": "#/components/schemas/OwnerType",
-                            "description": "Owner scope"
-                          },
-                          "size_bytes": {
-                            "type": [
-                              "integer",
-                              "null"
-                            ],
-                            "format": "int64",
-                            "description": "Size of latest version in bytes"
-                          },
-                          "type": {
-                            "$ref": "#/components/schemas/ArtifactType",
-                            "description": "Artifact type"
-                          },
-                          "updated": {
-                            "type": "string",
-                            "format": "date-time",
-                            "description": "Last update timestamp"
-                          },
-                          "visibility": {
-                            "$ref": "#/components/schemas/ArtifactVisibility",
-                            "description": "Visibility level"
-                          }
-                        }
-                      }
-                    },
-                    "message": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "description": "Optional message"
-                    }
-                  }
+                  "$ref": "#/components/schemas/PaginatedResponse_ArtifactSummary"
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid pagination"
           }
         },
         "security": [
@@ -9081,6 +9169,17 @@
                         "result": {
                           "type": "object",
                           "description": "Execution result/output"
+                        },
+                        "schema_binding": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/Value",
+                              "description": "Immutable admitted input/output contracts, excluding executable task metadata."
+                            }
+                          ]
                         },
                         "started_at": {
                           "type": [
@@ -9327,6 +9426,17 @@
                         "result": {
                           "type": "object",
                           "description": "Execution result/output"
+                        },
+                        "schema_binding": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/Value",
+                              "description": "Immutable admitted input/output contracts, excluding executable task metadata."
+                            }
+                          ]
                         },
                         "started_at": {
                           "type": [
@@ -12037,6 +12147,15 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "include_secret_values",
+            "in": "query",
+            "description": "Requires inquiry visibility, explicit decrypt authority, and recorded-origin access.",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -12367,7 +12486,7 @@
         "tags": [
           "internal"
         ],
-        "summary": "Stream the staged candidate for a pending pack-install test.",
+        "summary": "Stream the version-pinned candidate object for an assigned pack-install test.",
         "operationId": "download_pack_install_candidate_archive",
         "parameters": [
           {
@@ -12394,7 +12513,13 @@
           "200": {
             "description": "Candidate pack archive",
             "content": {
-              "application/gzip": {}
+              "application/gzip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "description": "Documentation-only raw archive bytes. Handlers stream the body unchanged."
+                }
+              }
             }
           },
           "401": {
@@ -12434,13 +12559,25 @@
           "200": {
             "description": "Pack archive",
             "content": {
-              "application/gzip": {}
+              "application/gzip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "description": "Documentation-only raw archive bytes. Handlers stream the body unchanged."
+                }
+              }
             }
           },
           "206": {
             "description": "Requested pack archive byte range",
             "content": {
-              "application/gzip": {}
+              "application/gzip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "description": "Documentation-only raw archive bytes. Handlers stream the body unchanged."
+                }
+              }
             }
           },
           "400": {
@@ -12698,6 +12835,22 @@
                           "description": "Unique reference identifier",
                           "example": "system.github_token"
                         },
+                        "schema_binding": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/Value"
+                            }
+                          ]
+                        },
+                        "schema_digest": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
                         "updated": {
                           "type": "string",
                           "format": "date-time",
@@ -12706,6 +12859,16 @@
                         },
                         "value": {
                           "description": "JSON value, or null when the caller cannot read and decrypt encrypted material."
+                        },
+                        "value_schema": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/Value"
+                            }
+                          ]
                         }
                       }
                     },
@@ -12890,6 +13053,22 @@
                           "description": "Unique reference identifier",
                           "example": "system.github_token"
                         },
+                        "schema_binding": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/Value"
+                            }
+                          ]
+                        },
+                        "schema_digest": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
                         "updated": {
                           "type": "string",
                           "format": "date-time",
@@ -12898,6 +13077,16 @@
                         },
                         "value": {
                           "description": "JSON value, or null when the caller cannot read and decrypt encrypted material."
+                        },
+                        "value_schema": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/Value"
+                            }
+                          ]
                         }
                       }
                     },
@@ -13087,6 +13276,22 @@
                           "description": "Unique reference identifier",
                           "example": "system.github_token"
                         },
+                        "schema_binding": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/Value"
+                            }
+                          ]
+                        },
+                        "schema_digest": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
                         "updated": {
                           "type": "string",
                           "format": "date-time",
@@ -13095,6 +13300,16 @@
                         },
                         "value": {
                           "description": "JSON value, or null when the caller cannot read and decrypt encrypted material."
+                        },
+                        "value_schema": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/Value"
+                            }
+                          ]
                         }
                       }
                     },
@@ -14014,6 +14229,7 @@
                       "type": "object",
                       "description": "Response DTO for pack information",
                       "required": [
+                        "owner_roles",
                         "id",
                         "ref",
                         "label",
@@ -14048,6 +14264,17 @@
                         "config": {
                           "type": "object",
                           "description": "Pack configuration"
+                        },
+                        "config_schema_binding": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/Value",
+                              "description": "Original contract for the current configuration revision."
+                            }
+                          ]
                         },
                         "created": {
                           "type": "string",
@@ -14092,6 +14319,12 @@
                         "meta": {
                           "type": "object",
                           "description": "Pack metadata"
+                        },
+                        "owner_roles": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         },
                         "ref": {
                           "type": "string",
@@ -14380,6 +14613,46 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Pack or activation conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid metadata or failed candidate tests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Deployment service failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Retryable database failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -14462,21 +14735,61 @@
             }
           },
           "400": {
-            "description": "Invalid request or tests failed",
+            "description": "Invalid request or YAML syntax",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiResponse_String"
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Deployment permission denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
           "409": {
-            "description": "Pack already exists",
+            "description": "Pack or activation conflict",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiResponse_String"
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid metadata or failed candidate tests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Deployment service failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Retryable database failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -14688,6 +15001,12 @@
                         "tests_skipped"
                       ],
                       "properties": {
+                        "diagnostics": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/PackDiagnostic"
+                          }
+                        },
                         "install_id": {
                           "type": [
                             "integer",
@@ -14830,6 +15149,368 @@
           },
           "404": {
             "description": "Pack not found"
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/packs/{pack_ref}/external-approvals": {
+      "get": {
+        "tags": [
+          "permissions"
+        ],
+        "operationId": "list_runtime_approvals",
+        "parameters": [
+          {
+            "name": "pack_ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number (1-based)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of items per page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1
+            },
+            "example": 50
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fixed external approvals, including revoked and expired records",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_RuntimeApprovalResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "permissions"
+        ],
+        "operationId": "issue_runtime_approval",
+        "parameters": [
+          {
+            "name": "pack_ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueRuntimeApprovalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "External approval issued after current authority validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_RuntimeApprovalResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/packs/{pack_ref}/external-approvals/{id}": {
+      "get": {
+        "tags": [
+          "permissions"
+        ],
+        "operationId": "get_runtime_approval",
+        "parameters": [
+          {
+            "name": "pack_ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Immutable external approval",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_RuntimeApprovalResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/packs/{pack_ref}/external-approvals/{id}/replace": {
+      "post": {
+        "tags": [
+          "permissions"
+        ],
+        "operationId": "replace_runtime_approval",
+        "parameters": [
+          {
+            "name": "pack_ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueRuntimeApprovalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "New approval issued and predecessor explicitly revoked atomically",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_RuntimeApprovalResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/packs/{pack_ref}/external-approvals/{id}/revoke": {
+      "post": {
+        "tags": [
+          "permissions"
+        ],
+        "operationId": "revoke_runtime_approval",
+        "parameters": [
+          {
+            "name": "pack_ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Approval explicitly revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_RuntimeApprovalResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/packs/{pack_ref}/external-input-approvals": {
+      "post": {
+        "tags": [
+          "permissions"
+        ],
+        "operationId": "issue_declared_input_approval",
+        "parameters": [
+          {
+            "name": "pack_ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueDeclaredInputApprovalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Independent fixed approval for one retained input declaration, with no execution API grants",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_RuntimeApprovalResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/packs/{pack_ref}/input-approval-targets": {
+      "get": {
+        "tags": [
+          "permissions"
+        ],
+        "operationId": "list_input_approval_targets",
+        "parameters": [
+          {
+            "name": "pack_ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "policy_revision",
+            "in": "query",
+            "description": "Omit for this pack's current policy; explicit IDs select retained metadata.",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1
+            },
+            "example": 20
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized immutable input targets, filtered before pagination; metadata is not consent or an invocation permit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_DeclaredInputApprovalTarget"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -15133,6 +15814,79 @@
           },
           "404": {
             "description": "Pack not found"
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/packs/{pack_ref}/schema-types": {
+      "get": {
+        "tags": [
+          "schema-types"
+        ],
+        "operationId": "list_pack_schema_types",
+        "parameters": [
+          {
+            "name": "pack_ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number (1-based)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of items per page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1
+            },
+            "example": 50
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Keyword query. Whitespace-separated tokens are AND-matched against\nthe catalog item's discovery fields.",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "example": "monitoring cpu"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Installed type metadata for one pack",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_SchemaTypeResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -15557,6 +16311,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "include_secret_values",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -15575,6 +16337,7 @@
                       "type": "object",
                       "description": "Response DTO for pack information",
                       "required": [
+                        "owner_roles",
                         "id",
                         "ref",
                         "label",
@@ -15609,6 +16372,17 @@
                         "config": {
                           "type": "object",
                           "description": "Pack configuration"
+                        },
+                        "config_schema_binding": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/Value",
+                              "description": "Original contract for the current configuration revision."
+                            }
+                          ]
                         },
                         "created": {
                           "type": "string",
@@ -15653,6 +16427,12 @@
                         "meta": {
                           "type": "object",
                           "description": "Pack metadata"
+                        },
+                        "owner_roles": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         },
                         "ref": {
                           "type": "string",
@@ -15795,6 +16575,7 @@
                       "type": "object",
                       "description": "Response DTO for pack information",
                       "required": [
+                        "owner_roles",
                         "id",
                         "ref",
                         "label",
@@ -15829,6 +16610,17 @@
                         "config": {
                           "type": "object",
                           "description": "Pack configuration"
+                        },
+                        "config_schema_binding": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/Value",
+                              "description": "Original contract for the current configuration revision."
+                            }
+                          ]
                         },
                         "created": {
                           "type": "string",
@@ -15873,6 +16665,12 @@
                         "meta": {
                           "type": "object",
                           "description": "Pack metadata"
+                        },
+                        "owner_roles": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         },
                         "ref": {
                           "type": "string",
@@ -16344,6 +17142,12 @@
                         "tests_skipped"
                       ],
                       "properties": {
+                        "diagnostics": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/PackDiagnostic"
+                          }
+                        },
                         "install_id": {
                           "type": [
                             "integer",
@@ -17185,6 +17989,126 @@
             "bearer_auth": []
           }
         ]
+      },
+      "post": {
+        "tags": [
+          "permissions"
+        ],
+        "operationId": "create_permission_set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePermissionSetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Permission set created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Standard API response wrapper",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "ref",
+                        "grants",
+                        "authored_grants",
+                        "authored_definition",
+                        "management_origin",
+                        "roles"
+                      ],
+                      "properties": {
+                        "authored_definition": {
+                          "$ref": "#/components/schemas/Value"
+                        },
+                        "authored_grants": {
+                          "$ref": "#/components/schemas/Value",
+                          "description": "Canonical authored scope, distinct from normalized effective ownership."
+                        },
+                        "description": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "grants": {
+                          "$ref": "#/components/schemas/Value"
+                        },
+                        "id": {
+                          "type": "integer",
+                          "format": "int64"
+                        },
+                        "label": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "management_origin": {
+                          "$ref": "#/components/schemas/ManagementOriginKind"
+                        },
+                        "pack_ref": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "ref": {
+                          "type": "string"
+                        },
+                        "retired_at": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date-time"
+                        },
+                        "roles": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/PermissionSetRoleAssignmentResponse"
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Optional message"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid reference or grants"
+          },
+          "409": {
+            "description": "Permission set reference already exists"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
       }
     },
     "/api/v1/permissions/sets/by-ref/{permission_set_ref}": {
@@ -17222,10 +18146,19 @@
                         "id",
                         "ref",
                         "grants",
+                        "authored_grants",
+                        "authored_definition",
                         "management_origin",
                         "roles"
                       ],
                       "properties": {
+                        "authored_definition": {
+                          "$ref": "#/components/schemas/Value"
+                        },
+                        "authored_grants": {
+                          "$ref": "#/components/schemas/Value",
+                          "description": "Canonical authored scope, distinct from normalized effective ownership."
+                        },
                         "description": {
                           "type": [
                             "string",
@@ -17420,10 +18353,19 @@
                         "id",
                         "ref",
                         "grants",
+                        "authored_grants",
+                        "authored_definition",
                         "management_origin",
                         "roles"
                       ],
                       "properties": {
+                        "authored_definition": {
+                          "$ref": "#/components/schemas/Value"
+                        },
+                        "authored_grants": {
+                          "$ref": "#/components/schemas/Value",
+                          "description": "Canonical authored scope, distinct from normalized effective ownership."
+                        },
                         "description": {
                           "type": [
                             "string",
@@ -18543,6 +19485,9 @@
           },
           "404": {
             "description": "Queue not found"
+          },
+          "409": {
+            "description": "Bulk target selection changed; retry the operation"
           }
         },
         "security": [
@@ -18631,6 +19576,15 @@
             "schema": {
               "type": "integer",
               "format": "int64"
+            }
+          },
+          {
+            "name": "decrypt",
+            "in": "query",
+            "description": "Restore encrypted payload fields. Requires queue read and decrypt rights.",
+            "required": false,
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -19538,6 +20492,182 @@
         ]
       }
     },
+    "/api/v1/schema-types": {
+      "get": {
+        "tags": [
+          "schema-types"
+        ],
+        "operationId": "list_schema_types",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number (1-based)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of items per page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1
+            },
+            "example": 50
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Keyword query. Whitespace-separated tokens are AND-matched against\nthe catalog item's discovery fields.",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "example": "monitoring cpu"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Installed, non-sensitive type metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_SchemaTypeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/schema-types/preview": {
+      "post": {
+        "tags": [
+          "schema-types"
+        ],
+        "operationId": "preview_schema",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SchemaPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Authoring rendering preview; not an authoritative assignment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_SchemaContractResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid schema"
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/schema-types/{ref}": {
+      "get": {
+        "tags": [
+          "schema-types"
+        ],
+        "operationId": "get_schema_type",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authored named type definition",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_SchemaTypeResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Type not installed"
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/schema-types/{ref}/inspect": {
+      "get": {
+        "tags": [
+          "schema-types"
+        ],
+        "operationId": "inspect_schema_type",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resolved named-type rendering contract",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_SchemaContractResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
     "/api/v1/sensors": {
       "get": {
         "tags": [
@@ -19709,6 +20839,14 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "include_secret_values",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -19889,6 +21027,47 @@
           },
           "500": {
             "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/sensors/{ref}/revoke-runtime": {
+      "post": {
+        "tags": [
+          "sensors"
+        ],
+        "operationId": "revoke_sensor_runtime",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "description": "Sensor reference",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SensorRuntimeRevocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Sensor runtime authority explicitly revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -24843,6 +26022,8 @@
             "type": "object",
             "description": "Response DTO for build pack environments operation",
             "required": [
+              "detection_only",
+              "message",
               "built_environments",
               "failed_environments",
               "summary"
@@ -24855,12 +26036,19 @@
                 },
                 "description": "Successfully built environments"
               },
+              "detection_only": {
+                "type": "boolean",
+                "description": "This endpoint detects API-host interpreters only; it does not build worker environments."
+              },
               "failed_environments": {
                 "type": "array",
                 "items": {
                   "$ref": "#/components/schemas/FailedEnvironment"
                 },
                 "description": "Failed environment builds"
+              },
+              "message": {
+                "type": "string"
               },
               "summary": {
                 "$ref": "#/components/schemas/BuildSummary",
@@ -25312,9 +26500,23 @@
                 "$ref": "#/components/schemas/i64",
                 "description": "Enforcement ID"
               },
+              "input_contract": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "Stored action input contract, without static executable metadata."
+              },
               "payload": {
                 "type": "object",
                 "description": "Enforcement payload"
+              },
+              "payload_contract": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "Original event payload contract, when its admission record is retained."
               },
               "resolved_at": {
                 "type": [
@@ -25400,6 +26602,17 @@
                 "description": "Creation timestamp",
                 "example": "2024-01-13T10:30:00Z"
               },
+              "execution_emitter": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/EventExecutionEmitterResponse",
+                    "description": "Historical emitting execution, present only with execution visibility.\nAfter execution retention, requires unrestricted execution read authority."
+                  }
+                ]
+              },
               "id": {
                 "$ref": "#/components/schemas/i64",
                 "description": "Event ID"
@@ -25426,6 +26639,13 @@
                 ],
                 "description": "Rule reference (if event was generated by a specific rule)",
                 "example": "core.timer_rule"
+              },
+              "schema_binding": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "Immutable admission contracts used to render historical event sections."
               },
               "source": {
                 "oneOf": [
@@ -25600,6 +26820,17 @@
               "result": {
                 "type": "object",
                 "description": "Execution result/output"
+              },
+              "schema_binding": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Value",
+                    "description": "Immutable admitted input/output contracts, excluding executable task metadata."
+                  }
+                ]
               },
               "started_at": {
                 "type": [
@@ -26020,6 +27251,17 @@
                 ],
                 "description": "Attune flat schema for expected response fields"
               },
+              "schema_binding": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Value",
+                    "description": "Original self-contained response contract. This contains no response values."
+                  }
+                ]
+              },
               "status": {
                 "$ref": "#/components/schemas/InquiryStatus",
                 "description": "Current status of the inquiry"
@@ -26221,6 +27463,22 @@
                 "description": "Unique reference identifier",
                 "example": "system.github_token"
               },
+              "schema_binding": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Value"
+                  }
+                ]
+              },
+              "schema_digest": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "updated": {
                 "type": "string",
                 "format": "date-time",
@@ -26229,6 +27487,16 @@
               },
               "value": {
                 "description": "JSON value, or null when the caller cannot read and decrypt encrypted material."
+              },
+              "value_schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Value"
+                  }
+                ]
               }
             }
           },
@@ -26312,6 +27580,12 @@
               "tests_skipped"
             ],
             "properties": {
+              "diagnostics": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PackDiagnostic"
+                }
+              },
               "install_id": {
                 "type": [
                   "integer",
@@ -26392,6 +27666,7 @@
                 "$ref": "#/components/schemas/AbsentMetadataPolicy",
                 "description": "Policy applied to metadata omitted by this release."
               },
+              "diagnostic_details": {},
               "error_message": {
                 "type": [
                   "string",
@@ -26466,6 +27741,7 @@
             "type": "object",
             "description": "Response DTO for pack information",
             "required": [
+              "owner_roles",
               "id",
               "ref",
               "label",
@@ -26500,6 +27776,17 @@
               "config": {
                 "type": "object",
                 "description": "Pack configuration"
+              },
+              "config_schema_binding": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Value",
+                    "description": "Original contract for the current configuration revision."
+                  }
+                ]
               },
               "created": {
                 "type": "string",
@@ -26544,6 +27831,12 @@
               "meta": {
                 "type": "object",
                 "description": "Pack metadata"
+              },
+              "owner_roles": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               },
               "ref": {
                 "type": "string",
@@ -27256,6 +28549,81 @@
           }
         }
       },
+      "ApiResponse_RuntimeApprovalResponse": {
+        "type": "object",
+        "description": "Standard API response wrapper",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "id",
+              "subject_pack_id",
+              "issuer_identity_id",
+              "issuer_login",
+              "grants",
+              "approval_digest",
+              "active",
+              "purpose"
+            ],
+            "properties": {
+              "active": {
+                "type": "boolean"
+              },
+              "approval_digest": {
+                "type": "string"
+              },
+              "expires_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "grants": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RbacGrant"
+                }
+              },
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "issuer_identity_id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "issuer_login": {
+                "type": "string"
+              },
+              "purpose": {
+                "$ref": "#/components/schemas/ApprovalPurpose"
+              },
+              "revoked_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "subject_pack_id": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional message"
+          }
+        }
+      },
       "ApiResponse_RuntimeResponse": {
         "type": "object",
         "description": "Standard API response wrapper",
@@ -27271,7 +28639,6 @@
               "ref",
               "name",
               "distributions",
-              "installation",
               "execution_config",
               "created",
               "updated"
@@ -27301,9 +28668,13 @@
                 "example": 1
               },
               "installation": {
-                "type": [
-                  "object",
-                  "null"
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Value"
+                  }
                 ]
               },
               "name": {
@@ -27341,6 +28712,104 @@
                 "format": "date-time",
                 "example": "2024-01-13T10:30:00Z"
               }
+            }
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional message"
+          }
+        }
+      },
+      "ApiResponse_SchemaContractResponse": {
+        "type": "object",
+        "description": "Standard API response wrapper",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "contract",
+              "semantic_digest"
+            ],
+            "properties": {
+              "contract": {
+                "description": "Self-contained rendering graph. Preserve authored references in editors."
+              },
+              "semantic_digest": {
+                "type": "string"
+              }
+            }
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional message"
+          }
+        }
+      },
+      "ApiResponse_SchemaTypeResponse": {
+        "type": "object",
+        "description": "Standard API response wrapper",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "id",
+              "ref",
+              "pack_ref",
+              "label",
+              "schema",
+              "reference_visibility",
+              "reference_allowed_pack_refs"
+            ],
+            "properties": {
+              "description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "label": {
+                "type": "string"
+              },
+              "managed_release": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "int64"
+              },
+              "pack_ref": {
+                "type": "string"
+              },
+              "ref": {
+                "type": "string"
+              },
+              "reference_allowed_pack_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "reference_visibility": {
+                "type": "string",
+                "description": "Pack-reference policy, not a restriction on authenticated inspection or\nKey schema assignment."
+              },
+              "schema": {}
             }
           },
           "message": {
@@ -27398,6 +28867,28 @@
                   }
                 ]
               },
+              "config": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Value",
+                    "description": "Current configuration projection. Secret fields remain redacted by default."
+                  }
+                ]
+              },
+              "config_schema_binding": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Value",
+                    "description": "Original contract for the current configuration revision."
+                  }
+                ]
+              },
               "created": {
                 "type": "string",
                 "format": "date-time",
@@ -27452,6 +28943,14 @@
                     "description": "Per-sensor retention policy override for registered stdout/stderr log artifacts."
                   }
                 ]
+              },
+              "managed_metadata_revision": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "int64",
+                "description": "Current immutable executable/purpose admission over pinned code bytes."
               },
               "pack": {
                 "type": [
@@ -27528,25 +29027,6 @@
                 "description": "Worker taints tolerated by this sensor process."
               }
             }
-          },
-          "message": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Optional message"
-          }
-        }
-      },
-      "ApiResponse_String": {
-        "type": "object",
-        "description": "Standard API response wrapper",
-        "required": [
-          "data"
-        ],
-        "properties": {
-          "data": {
-            "type": "string"
           },
           "message": {
             "type": [
@@ -27744,6 +29224,7 @@
               "enabled",
               "param_schema",
               "out_schema",
+              "event_config_schema",
               "webhook_enabled",
               "is_adhoc",
               "reference_visibility",
@@ -27769,6 +29250,13 @@
                 "type": "boolean",
                 "description": "Whether the trigger is enabled",
                 "example": true
+              },
+              "event_config_schema": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "Flat schema for sensor-supplied event configuration."
               },
               "id": {
                 "type": "integer",
@@ -28613,6 +30101,17 @@
                   }
                 ]
               },
+              "schema_binding": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Value",
+                    "description": "The item's original admission contract, never the queue's current schema."
+                  }
+                ]
+              },
               "status": {
                 "$ref": "#/components/schemas/WorkQueueItemStatus"
               },
@@ -28962,6 +30461,104 @@
           }
         }
       },
+      "ApplyLiveCacheApiResponse": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ApplyLiveCacheResponse"
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "ApplyLiveCacheRequest": {
+        "type": "object",
+        "description": "Atomic mutations to a durable live namespace. No snapshot lifecycle is used.",
+        "required": [
+          "owner_type",
+          "request_id",
+          "expected_revision"
+        ],
+        "properties": {
+          "deleted_external_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CacheEntryUpload"
+            }
+          },
+          "expected_revision": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Required optimistic guard. Use zero for the first batch."
+          },
+          "owner_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "owner_type": {
+            "$ref": "#/components/schemas/OwnerType"
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "source_revision": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Omission or null retains the current upstream cursor."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApplyLiveCacheResponse": {
+        "type": "object",
+        "required": [
+          "revision",
+          "record_count",
+          "size_bytes",
+          "source_revision",
+          "replayed"
+        ],
+        "properties": {
+          "record_count": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "source_revision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
       "ApplyWorkQueueItemsRequest": {
         "type": "object",
         "required": [
@@ -29044,6 +30641,47 @@
             "minimum": 0
           }
         }
+      },
+      "ApprovalPurpose": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "runtime"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "targets",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "declared_input"
+                ]
+              },
+              "targets": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DeclaredInputApprovalTarget"
+                },
+                "description": "Only currently visible retained targets. Empty when target rows were\ncollected or current component visibility denies disclosure. Purpose\nnever falls back to runtime merely because no target is visible.",
+                "maxItems": 256
+              }
+            }
+          }
+        ]
       },
       "ArtifactBodyState": {
         "type": "string",
@@ -29304,6 +30942,97 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "ArtifactVersionSummary": {
+        "type": "object",
+        "description": "Simplified version for list endpoints",
+        "required": [
+          "id",
+          "version",
+          "created"
+        ],
+        "properties": {
+          "body_state": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ArtifactBodyState"
+              }
+            ]
+          },
+          "content_type": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "MIME content type"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp"
+          },
+          "created_by": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Who created this version"
+          },
+          "execution": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Execution that produced this version"
+          },
+          "file_path": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Relative file path for disk-backed versions"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Version ID"
+          },
+          "object_key": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "provider_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sha256": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "size_bytes": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Size of content in bytes"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Version number"
           }
         }
       },
@@ -29635,6 +31364,114 @@
           }
         }
       },
+      "AuthoredGrantConstraints": {
+        "type": "object",
+        "description": "Public authoring schema. Structural ownership and database target IDs are\nserver-owned and deliberately absent. Runtime validation remains canonical.",
+        "properties": {
+          "attributes": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "encrypted": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "execution_scope": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RbacExecutionScopeConstraint"
+              }
+            ]
+          },
+          "owner": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RbacOwnerConstraint"
+              }
+            ]
+          },
+          "owner_refs": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "owner_types": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/OwnerType"
+            }
+          },
+          "pack_owner": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RbacPackOwnerConstraint"
+              }
+            ]
+          },
+          "pack_refs": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "pack_state": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RbacPackStateConstraint"
+              }
+            ]
+          },
+          "refs": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "visibility": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ArtifactVisibility"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "AuthorizationBasis": {
         "type": "string",
         "enum": [
@@ -29731,6 +31568,8 @@
         "type": "object",
         "description": "Response DTO for build pack environments operation",
         "required": [
+          "detection_only",
+          "message",
           "built_environments",
           "failed_environments",
           "summary"
@@ -29743,12 +31582,19 @@
             },
             "description": "Successfully built environments"
           },
+          "detection_only": {
+            "type": "boolean",
+            "description": "This endpoint detects API-host interpreters only; it does not build worker environments."
+          },
           "failed_environments": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/FailedEnvironment"
             },
             "description": "Failed environment builds"
+          },
+          "message": {
+            "type": "string"
           },
           "summary": {
             "$ref": "#/components/schemas/BuildSummary",
@@ -30021,6 +31867,7 @@
           "status",
           "client_refresh_id",
           "expected_active_generation_id",
+          "source_generation_id",
           "expected_chunk_count",
           "expected_record_count",
           "expected_size_bytes",
@@ -30165,6 +32012,17 @@
             "type": "integer",
             "format": "int64"
           },
+          "source_generation_id": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/i64",
+                "description": "Historical source snapshot for a database-local clone, otherwise null."
+              }
+            ]
+          },
           "source_revision": {
             "type": [
               "string",
@@ -30186,6 +32044,14 @@
           "active",
           "retired",
           "failed"
+        ]
+      },
+      "CacheMode": {
+        "type": "string",
+        "description": "Cache mutation contract, fixed when the namespace is created.",
+        "enum": [
+          "snapshot",
+          "live"
         ]
       },
       "CacheMultiLookupApiResponse": {
@@ -30248,13 +32114,21 @@
         "description": "Bounded multi-ID lookup response. Missing IDs are reported explicitly.",
         "required": [
           "generation_id",
+          "revision",
           "items",
           "missing_external_ids",
           "stale"
         ],
         "properties": {
           "generation_id": {
-            "$ref": "#/components/schemas/i64"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/i64"
+              }
+            ]
           },
           "items": {
             "type": "array",
@@ -30267,6 +32141,13 @@
             "items": {
               "type": "string"
             }
+          },
+          "revision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
           },
           "stale": {
             "type": "boolean"
@@ -30449,6 +32330,8 @@
         "type": "object",
         "description": "Namespace metadata and freshness/health summary. Never includes entries.",
         "required": [
+          "mode",
+          "revision",
           "id",
           "owner_type",
           "owner",
@@ -30548,6 +32431,9 @@
             "type": "integer",
             "format": "int32"
           },
+          "mode": {
+            "$ref": "#/components/schemas/CacheMode"
+          },
           "namespace": {
             "type": "string"
           },
@@ -30582,6 +32468,13 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "revision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
           },
           "size_bytes": {
             "type": [
@@ -30688,12 +32581,20 @@
         "description": "Point lookup response. `item = None` is an authorized miss.",
         "required": [
           "generation_id",
+          "revision",
           "item",
           "stale"
         ],
         "properties": {
           "generation_id": {
-            "$ref": "#/components/schemas/i64"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/i64"
+              }
+            ]
           },
           "item": {
             "oneOf": [
@@ -30704,6 +32605,13 @@
                 "$ref": "#/components/schemas/CacheEntryResponse"
               }
             ]
+          },
+          "revision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
           },
           "stale": {
             "type": "boolean"
@@ -30773,7 +32681,7 @@
           "max_cleanup_cycle_milliseconds": {
             "type": "integer",
             "format": "int64",
-            "description": "Total generation-reclamation budget per supervisor cycle.",
+            "description": "Generation-reclamation business-work budget per supervisor cycle.\nAn interrupted repository attempt may spend at most another 500ms on\nprotocol drain and rollback acknowledgement, never additional business work.",
             "minimum": 0
           },
           "max_generations_per_cycle": {
@@ -31397,6 +33305,17 @@
           "owner_type": {
             "$ref": "#/components/schemas/OwnerType"
           },
+          "source_generation_id": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/i64",
+                "description": "Clone this active generation inside PostgreSQL and ingest delta chunks.\nMust equal expected_active_generation_id. Omit for a full snapshot."
+              }
+            ]
+          },
           "source_revision": {
             "type": [
               "string",
@@ -31418,6 +33337,9 @@
               "namespace"
             ],
             "properties": {
+              "mode": {
+                "$ref": "#/components/schemas/CacheMode"
+              },
               "namespace": {
                 "type": "string",
                 "description": "Normalized lowercase namespace, e.g. `salesforce.users`.",
@@ -31566,7 +33488,8 @@
             "description": "Trigger reference (e.g., \"core.timer\", \"core.webhook\")\nAlso accepts \"trigger_type\" for compatibility with the sensor interface spec.",
             "example": "core.timer"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CreateExecutionRequest": {
         "type": "object",
@@ -31678,7 +33601,8 @@
               }
             ]
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CreateExternalIdentityMappingRequest": {
         "type": "object",
@@ -31957,8 +33881,26 @@
             "$ref": "#/components/schemas/OwnerType",
             "description": "Type of owner (system, identity, pack, action, sensor)"
           },
+          "schema_digest": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional preview comparison, never a contract/revision selector."
+          },
           "value": {
             "description": "The secret value to store. Can be a string, object, array, number, or boolean."
+          },
+          "value_schema": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Value",
+                "description": "Optional inline or named single-value schema. Selection is server-owned."
+              }
+            ]
           }
         }
       },
@@ -32047,6 +33989,14 @@
             "type": "object",
             "description": "Pack metadata"
           },
+          "owner_roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Ownership roles require this endpoint's matching Create and Install authority.",
+            "maxItems": 64
+          },
           "ref": {
             "type": "string",
             "description": "Unique reference identifier (e.g., \"core\", \"aws\", \"slack\")",
@@ -32116,6 +34066,45 @@
             "type": "string"
           }
         }
+      },
+      "CreatePermissionSetRequest": {
+        "type": "object",
+        "required": [
+          "ref",
+          "grants"
+        ],
+        "properties": {
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "grants": {
+            "$ref": "#/components/schemas/Value"
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "description": "Unique reference in namespace.name format. Does not imply pack ownership."
+          },
+          "scope": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PermissionScope"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
       },
       "CreatePermissionSetRoleAssignmentRequest": {
         "type": "object",
@@ -32328,11 +34317,15 @@
             "description": "Runtime execution configuration"
           },
           "installation": {
-            "type": [
-              "object",
-              "null"
-            ],
-            "description": "Optional installation metadata"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Value",
+                "description": "Optional installation metadata"
+              }
+            ]
           },
           "name": {
             "type": "string",
@@ -32501,6 +34494,13 @@
             "type": "boolean",
             "description": "Whether the trigger is enabled",
             "example": true
+          },
+          "event_config_schema": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Flat schema for sensor-supplied event configuration, not trigger-instance parameters."
           },
           "label": {
             "type": "string",
@@ -33486,6 +35486,65 @@
           "public"
         ]
       },
+      "DeclaredInputApprovalTarget": {
+        "type": "object",
+        "required": [
+          "policy_revision",
+          "invocation_binding",
+          "action_id",
+          "action_ref",
+          "pack_id",
+          "pack_ref",
+          "release_id",
+          "declaration_revision",
+          "source_path",
+          "expression"
+        ],
+        "properties": {
+          "action_id": {
+            "$ref": "#/components/schemas/i64"
+          },
+          "action_ref": {
+            "type": "string"
+          },
+          "declaration_revision": {
+            "type": "string"
+          },
+          "expression": {
+            "type": "string",
+            "description": "Authored metadata only, never the evaluated input or source configuration."
+          },
+          "invocation_binding": {
+            "$ref": "#/components/schemas/InvocationBinding"
+          },
+          "metadata_revision": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/i64"
+              }
+            ]
+          },
+          "pack_id": {
+            "$ref": "#/components/schemas/i64"
+          },
+          "pack_ref": {
+            "type": "string"
+          },
+          "policy_revision": {
+            "$ref": "#/components/schemas/i64"
+          },
+          "release_id": {
+            "$ref": "#/components/schemas/i64"
+          },
+          "source_path": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "DependencyError": {
         "type": "object",
         "description": "Dependency analysis error",
@@ -33732,9 +35791,23 @@
             "$ref": "#/components/schemas/i64",
             "description": "Enforcement ID"
           },
+          "input_contract": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Stored action input contract, without static executable metadata."
+          },
           "payload": {
             "type": "object",
             "description": "Enforcement payload"
+          },
+          "payload_contract": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Original event payload contract, when its admission record is retained."
           },
           "resolved_at": {
             "type": [
@@ -33948,6 +36021,55 @@
           }
         }
       },
+      "EventExecutionEmitterResponse": {
+        "type": "object",
+        "description": "Non-secret historical execution attribution. Requester and queue-item\nattribution stay behind their own inspection permissions.",
+        "required": [
+          "execution_id",
+          "admission_id",
+          "sponsor_identity_id",
+          "pack_id",
+          "pack_ref",
+          "action_ref",
+          "policy_revision_id",
+          "release_id",
+          "release_digest",
+          "attempt"
+        ],
+        "properties": {
+          "action_ref": {
+            "type": "string"
+          },
+          "admission_id": {
+            "$ref": "#/components/schemas/i64"
+          },
+          "attempt": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "execution_id": {
+            "$ref": "#/components/schemas/i64"
+          },
+          "pack_id": {
+            "$ref": "#/components/schemas/i64"
+          },
+          "pack_ref": {
+            "type": "string"
+          },
+          "policy_revision_id": {
+            "$ref": "#/components/schemas/i64"
+          },
+          "release_digest": {
+            "type": "string"
+          },
+          "release_id": {
+            "$ref": "#/components/schemas/i64"
+          },
+          "sponsor_identity_id": {
+            "$ref": "#/components/schemas/i64"
+          }
+        }
+      },
       "EventResponse": {
         "type": "object",
         "description": "Full event response with all details",
@@ -33971,6 +36093,17 @@
             "format": "date-time",
             "description": "Creation timestamp",
             "example": "2024-01-13T10:30:00Z"
+          },
+          "execution_emitter": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EventExecutionEmitterResponse",
+                "description": "Historical emitting execution, present only with execution visibility.\nAfter execution retention, requires unrestricted execution read authority."
+              }
+            ]
           },
           "id": {
             "$ref": "#/components/schemas/i64",
@@ -33998,6 +36131,13 @@
             ],
             "description": "Rule reference (if event was generated by a specific rule)",
             "example": "core.timer_rule"
+          },
+          "schema_binding": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Immutable admission contracts used to render historical event sections."
           },
           "source": {
             "oneOf": [
@@ -34132,6 +36272,13 @@
             "example": "core.webhook"
           }
         }
+      },
+      "ExecutionOptionsAuthoritySource": {
+        "type": "string",
+        "enum": [
+          "pack",
+          "human_delegation"
+        ]
       },
       "ExecutionRescheduleResponse": {
         "type": "object",
@@ -34278,6 +36425,17 @@
           "result": {
             "type": "object",
             "description": "Execution result/output"
+          },
+          "schema_binding": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Value",
+                "description": "Immutable admitted input/output contracts, excluding executable task metadata."
+              }
+            ]
           },
           "started_at": {
             "type": [
@@ -34579,6 +36737,16 @@
           "error"
         ],
         "properties": {
+          "details": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Value"
+              }
+            ]
+          },
           "error": {
             "type": "string",
             "description": "Error message"
@@ -34599,6 +36767,16 @@
           "error_stage"
         ],
         "properties": {
+          "details": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Value"
+              }
+            ]
+          },
           "error": {
             "type": "string",
             "description": "Error message"
@@ -34963,9 +37141,8 @@
           }
         }
       },
-      "InquiryRespondRequest": {
+      "InquiryLiteralResponseRequest": {
         "type": "object",
-        "description": "Request to respond to an inquiry (user-facing endpoint)",
         "required": [
           "response"
         ],
@@ -34974,7 +37151,32 @@
             "type": "object",
             "description": "Response data conforming to the inquiry's response_schema"
           }
-        }
+        },
+        "additionalProperties": false
+      },
+      "InquiryOptionResponseRequest": {
+        "type": "object",
+        "required": [
+          "option_ref"
+        ],
+        "properties": {
+          "option_ref": {
+            "type": "string",
+            "description": "Select the stored option without exposing its protected response value."
+          }
+        },
+        "additionalProperties": false
+      },
+      "InquiryRespondRequest": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/InquiryLiteralResponseRequest"
+          },
+          {
+            "$ref": "#/components/schemas/InquiryOptionResponseRequest"
+          }
+        ],
+        "description": "Request to respond to an inquiry (user-facing endpoint)"
       },
       "InquiryResponse": {
         "type": "object",
@@ -35102,6 +37304,17 @@
               "null"
             ],
             "description": "Attune flat schema for expected response fields"
+          },
+          "schema_binding": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Value",
+                "description": "Original self-contained response contract. This contains no response values."
+              }
+            ]
           },
           "status": {
             "$ref": "#/components/schemas/InquiryStatus",
@@ -35365,6 +37578,9 @@
           "absent_metadata_policy": {
             "$ref": "#/components/schemas/AbsentMetadataPolicy",
             "description": "How to handle pack-managed metadata omitted by this release."
+          },
+          "acknowledge_incompatible_rollout": {
+            "type": "boolean"
           },
           "force": {
             "type": "boolean",
@@ -35636,6 +37852,133 @@
           }
         }
       },
+      "InvocationBinding": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "action_ref",
+              "kind"
+            ],
+            "properties": {
+              "action_ref": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "action"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "workflow_ref",
+              "task_path",
+              "action_ref",
+              "kind"
+            ],
+            "properties": {
+              "action_ref": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "workflow_task"
+                ]
+              },
+              "task_path": {
+                "type": "string"
+              },
+              "workflow_ref": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "rule_ref",
+              "action_ref",
+              "kind"
+            ],
+            "properties": {
+              "action_ref": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "rule"
+                ]
+              },
+              "rule_ref": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "queue_ref",
+              "action_ref",
+              "kind"
+            ],
+            "properties": {
+              "action_ref": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "queue"
+                ]
+              },
+              "queue_ref": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "IssueDeclaredInputApprovalRequest": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/RendererInputApprovalRequest"
+          },
+          {
+            "$ref": "#/components/schemas/PolicyInputApprovalRequest"
+          }
+        ],
+        "description": "Canonical flat JSON request. Exactly one target form is accepted; purpose is\nbound by the server's retained declaration, never selected by this request."
+      },
+      "IssueRuntimeApprovalRequest": {
+        "type": "object",
+        "required": [
+          "grants"
+        ],
+        "properties": {
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Omit for no automatic expiry. Explicit revocation remains available."
+          },
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PermissionGrantDefinition"
+            },
+            "description": "Fixed approved grants. Human-relative scopes are not accepted."
+          }
+        },
+        "additionalProperties": false
+      },
       "KeyResponse": {
         "type": "object",
         "description": "Full key response with all details (value redacted in list views)",
@@ -35761,6 +38104,22 @@
             "description": "Unique reference identifier",
             "example": "system.github_token"
           },
+          "schema_binding": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Value"
+              }
+            ]
+          },
+          "schema_digest": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "updated": {
             "type": "string",
             "format": "date-time",
@@ -35769,6 +38128,16 @@
           },
           "value": {
             "description": "JSON value, or null when the caller cannot read and decrypt encrypted material."
+          },
+          "value_schema": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Value"
+              }
+            ]
           }
         }
       },
@@ -36396,6 +38765,82 @@
           }
         ]
       },
+      "PackDiagnostic": {
+        "type": "object",
+        "required": [
+          "severity",
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "column": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "component_kind": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "component_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hint": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "line": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "message": {
+            "type": "string"
+          },
+          "metadata_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reference_chain": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "severity": {
+            "$ref": "#/components/schemas/PackDiagnosticSeverity"
+          }
+        }
+      },
+      "PackDiagnosticSeverity": {
+        "type": "string",
+        "enum": [
+          "error",
+          "warning"
+        ]
+      },
       "PackIndexEntry": {
         "type": "object",
         "description": "Pack entry in a registry index",
@@ -36598,6 +39043,12 @@
           "tests_skipped"
         ],
         "properties": {
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PackDiagnostic"
+            }
+          },
           "install_id": {
             "type": [
               "integer",
@@ -36662,6 +39113,7 @@
             "$ref": "#/components/schemas/AbsentMetadataPolicy",
             "description": "Policy applied to metadata omitted by this release."
           },
+          "diagnostic_details": {},
           "error_message": {
             "type": [
               "string",
@@ -36755,6 +39207,18 @@
         ],
         "description": "Additional pack metadata"
       },
+      "PackOwnershipMetadata": {
+        "type": "object",
+        "properties": {
+          "owner_roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 64
+          }
+        }
+      },
       "PackRegistryIndexSummary": {
         "type": "object",
         "required": [
@@ -36830,6 +39294,7 @@
         "type": "object",
         "description": "Response DTO for pack information",
         "required": [
+          "owner_roles",
           "id",
           "ref",
           "label",
@@ -36864,6 +39329,17 @@
           "config": {
             "type": "object",
             "description": "Pack configuration"
+          },
+          "config_schema_binding": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Value",
+                "description": "Original contract for the current configuration revision."
+              }
+            ]
           },
           "created": {
             "type": "string",
@@ -36908,6 +39384,12 @@
           "meta": {
             "type": "object",
             "description": "Pack metadata"
+          },
+          "owner_roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "ref": {
             "type": "string",
@@ -36989,6 +39471,7 @@
         "type": "object",
         "description": "Simplified pack response (for list endpoints)",
         "required": [
+          "owner_roles",
           "id",
           "ref",
           "label",
@@ -37028,6 +39511,12 @@
             "type": "string",
             "description": "Human-readable label",
             "example": "Slack Integration"
+          },
+          "owner_roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "ref": {
             "type": "string",
@@ -37262,6 +39751,12 @@
         ],
         "properties": {
           "absent_metadata_policy": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "acknowledge_incompatible_rollout": {
             "type": [
               "string",
               "null"
@@ -37765,6 +40260,115 @@
           }
         }
       },
+      "PaginatedResponse_ArtifactVersionSummary": {
+        "type": "object",
+        "description": "Paginated response wrapper",
+        "required": [
+          "items",
+          "pagination"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "Simplified version for list endpoints",
+              "required": [
+                "id",
+                "version",
+                "created"
+              ],
+              "properties": {
+                "body_state": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ArtifactBodyState"
+                    }
+                  ]
+                },
+                "content_type": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "MIME content type"
+                },
+                "created": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Creation timestamp"
+                },
+                "created_by": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Who created this version"
+                },
+                "execution": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "int64",
+                  "description": "Execution that produced this version"
+                },
+                "file_path": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Relative file path for disk-backed versions"
+                },
+                "id": {
+                  "type": "integer",
+                  "format": "int64",
+                  "description": "Version ID"
+                },
+                "object_key": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "provider_version": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "sha256": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "size_bytes": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "int64",
+                  "description": "Size of content in bytes"
+                },
+                "version": {
+                  "type": "integer",
+                  "format": "int32",
+                  "description": "Version number"
+                }
+              }
+            },
+            "description": "The page items"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMeta",
+            "description": "Pagination metadata"
+          }
+        }
+      },
       "PaginatedResponse_AuditEventSummary": {
         "type": "object",
         "description": "Paginated response wrapper",
@@ -37857,6 +40461,83 @@
                   ]
                 }
               }
+            },
+            "description": "The page items"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMeta",
+            "description": "Pagination metadata"
+          }
+        }
+      },
+      "PaginatedResponse_DeclaredInputApprovalTarget": {
+        "type": "object",
+        "description": "Paginated response wrapper",
+        "required": [
+          "items",
+          "pagination"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "policy_revision",
+                "invocation_binding",
+                "action_id",
+                "action_ref",
+                "pack_id",
+                "pack_ref",
+                "release_id",
+                "declaration_revision",
+                "source_path",
+                "expression"
+              ],
+              "properties": {
+                "action_id": {
+                  "$ref": "#/components/schemas/i64"
+                },
+                "action_ref": {
+                  "type": "string"
+                },
+                "declaration_revision": {
+                  "type": "string"
+                },
+                "expression": {
+                  "type": "string",
+                  "description": "Authored metadata only, never the evaluated input or source configuration."
+                },
+                "invocation_binding": {
+                  "$ref": "#/components/schemas/InvocationBinding"
+                },
+                "metadata_revision": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/i64"
+                    }
+                  ]
+                },
+                "pack_id": {
+                  "$ref": "#/components/schemas/i64"
+                },
+                "pack_ref": {
+                  "type": "string"
+                },
+                "policy_revision": {
+                  "$ref": "#/components/schemas/i64"
+                },
+                "release_id": {
+                  "$ref": "#/components/schemas/i64"
+                },
+                "source_path": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
             },
             "description": "The page items"
           },
@@ -38632,6 +41313,7 @@
               "type": "object",
               "description": "Simplified pack response (for list endpoints)",
               "required": [
+                "owner_roles",
                 "id",
                 "ref",
                 "label",
@@ -38671,6 +41353,12 @@
                   "type": "string",
                   "description": "Human-readable label",
                   "example": "Slack Integration"
+                },
+                "owner_roles": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 },
                 "ref": {
                   "type": "string",
@@ -39094,6 +41782,83 @@
           }
         }
       },
+      "PaginatedResponse_RuntimeApprovalResponse": {
+        "type": "object",
+        "description": "Paginated response wrapper",
+        "required": [
+          "items",
+          "pagination"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "subject_pack_id",
+                "issuer_identity_id",
+                "issuer_login",
+                "grants",
+                "approval_digest",
+                "active",
+                "purpose"
+              ],
+              "properties": {
+                "active": {
+                  "type": "boolean"
+                },
+                "approval_digest": {
+                  "type": "string"
+                },
+                "expires_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "grants": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RbacGrant"
+                  }
+                },
+                "id": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "issuer_identity_id": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "issuer_login": {
+                  "type": "string"
+                },
+                "purpose": {
+                  "$ref": "#/components/schemas/ApprovalPurpose"
+                },
+                "revoked_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "subject_pack_id": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "description": "The page items"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMeta",
+            "description": "Pagination metadata"
+          }
+        }
+      },
       "PaginatedResponse_RuntimeSummary": {
         "type": "object",
         "description": "Paginated response wrapper",
@@ -39159,6 +41924,75 @@
                   "format": "date-time",
                   "example": "2024-01-13T10:30:00Z"
                 }
+              }
+            },
+            "description": "The page items"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMeta",
+            "description": "Pagination metadata"
+          }
+        }
+      },
+      "PaginatedResponse_SchemaTypeResponse": {
+        "type": "object",
+        "description": "Paginated response wrapper",
+        "required": [
+          "items",
+          "pagination"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "ref",
+                "pack_ref",
+                "label",
+                "schema",
+                "reference_visibility",
+                "reference_allowed_pack_refs"
+              ],
+              "properties": {
+                "description": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "id": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "managed_release": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "int64"
+                },
+                "pack_ref": {
+                  "type": "string"
+                },
+                "ref": {
+                  "type": "string"
+                },
+                "reference_allowed_pack_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "reference_visibility": {
+                  "type": "string",
+                  "description": "Pack-reference policy, not a restriction on authenticated inspection or\nKey schema assignment."
+                },
+                "schema": {}
               }
             },
             "description": "The page items"
@@ -39541,6 +42375,17 @@
                     },
                     {
                       "$ref": "#/components/schemas/i64"
+                    }
+                  ]
+                },
+                "schema_binding": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Value",
+                      "description": "The item's original admission contract, never the queue's current schema."
                     }
                   ]
                 },
@@ -40096,6 +42941,46 @@
           }
         ]
       },
+      "PermissionGrantDefinition": {
+        "type": "object",
+        "description": "Canonical authored grant. A grant may override its set's default scope.",
+        "required": [
+          "resource",
+          "actions"
+        ],
+        "properties": {
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RbacAction"
+            }
+          },
+          "constraints": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AuthoredGrantConstraints"
+              }
+            ]
+          },
+          "resource": {
+            "$ref": "#/components/schemas/RbacResource"
+          },
+          "scope": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PermissionScope"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "PermissionIdentityTarget": {
         "type": "object",
         "required": [
@@ -40143,6 +43028,13 @@
           "role"
         ]
       },
+      "PermissionScope": {
+        "type": "string",
+        "enum": [
+          "pack",
+          "external"
+        ]
+      },
       "PermissionSetRoleAssignmentResponse": {
         "type": "object",
         "required": [
@@ -40181,10 +43073,19 @@
           "id",
           "ref",
           "grants",
+          "authored_grants",
+          "authored_definition",
           "management_origin",
           "roles"
         ],
         "properties": {
+          "authored_definition": {
+            "$ref": "#/components/schemas/Value"
+          },
+          "authored_grants": {
+            "$ref": "#/components/schemas/Value",
+            "description": "Canonical authored scope, distinct from normalized effective ownership."
+          },
           "description": {
             "type": [
               "string",
@@ -40270,6 +43171,51 @@
           "upgrade_required",
           "incompatible"
         ]
+      },
+      "PolicyInputApprovalRequest": {
+        "type": "object",
+        "required": [
+          "policy_revision",
+          "invocation_binding",
+          "declaration_revision",
+          "source_path",
+          "expression",
+          "grants"
+        ],
+        "properties": {
+          "declaration_revision": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "expression": {
+            "type": "string"
+          },
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PermissionGrantDefinition"
+            }
+          },
+          "invocation_binding": {
+            "$ref": "#/components/schemas/InvocationBinding"
+          },
+          "policy_revision": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Pre-execution target, supplied with invocation_binding, without a renderer.",
+            "minimum": 1
+          },
+          "source_path": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       },
       "PolicyMethod": {
         "type": "string",
@@ -40916,6 +43862,236 @@
           }
         }
       },
+      "RbacAction": {
+        "type": "string",
+        "enum": [
+          "read",
+          "create",
+          "install",
+          "configure",
+          "update",
+          "delete",
+          "execute",
+          "cancel",
+          "respond",
+          "manage",
+          "decrypt",
+          "use"
+        ]
+      },
+      "RbacExecutionScopeConstraint": {
+        "type": "string",
+        "enum": [
+          "self",
+          "descendants",
+          "any"
+        ]
+      },
+      "RbacGrant": {
+        "type": "object",
+        "required": [
+          "resource",
+          "actions"
+        ],
+        "properties": {
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RbacAction"
+            }
+          },
+          "constraints": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RbacGrantConstraints"
+              }
+            ]
+          },
+          "resource": {
+            "$ref": "#/components/schemas/RbacResource"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RbacGrantConstraints": {
+        "type": "object",
+        "properties": {
+          "attributes": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Value"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "encrypted": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "execution_scope": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RbacExecutionScopeConstraint"
+              }
+            ]
+          },
+          "ids": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/i64"
+            }
+          },
+          "managing_pack_id": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/i64",
+                "description": "Server-normalized structural ownership. Authored selectors cannot set it."
+              }
+            ]
+          },
+          "owner": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RbacOwnerConstraint"
+              }
+            ]
+          },
+          "owner_refs": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "owner_types": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/OwnerType"
+            }
+          },
+          "pack_owner": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RbacPackOwnerConstraint"
+              }
+            ]
+          },
+          "pack_refs": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "pack_state": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RbacPackStateConstraint"
+              }
+            ]
+          },
+          "refs": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "visibility": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ArtifactVisibility"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "RbacOwnerConstraint": {
+        "type": "string",
+        "enum": [
+          "self",
+          "any",
+          "none"
+        ]
+      },
+      "RbacPackOwnerConstraint": {
+        "type": "string",
+        "enum": [
+          "self"
+        ]
+      },
+      "RbacPackStateConstraint": {
+        "type": "string",
+        "description": "A namespace claim requires authoritative absence, not an ownerless pack row.",
+        "enum": [
+          "uninstalled"
+        ]
+      },
+      "RbacResource": {
+        "type": "string",
+        "enum": [
+          "packs",
+          "actions",
+          "policies",
+          "queues",
+          "queue_items",
+          "rules",
+          "triggers",
+          "executions",
+          "events",
+          "enforcements",
+          "inquiries",
+          "keys",
+          "caches",
+          "artifacts",
+          "runtimes",
+          "workers",
+          "dashboards",
+          "retention",
+          "identities",
+          "permissions",
+          "audit_log"
+        ]
+      },
       "RefreshTokenRequest": {
         "type": "object",
         "description": "Refresh token request",
@@ -40940,6 +44116,10 @@
           "absent_metadata_policy": {
             "$ref": "#/components/schemas/AbsentMetadataPolicy",
             "description": "How to handle pack-managed metadata omitted by this release."
+          },
+          "acknowledge_incompatible_rollout": {
+            "type": "boolean",
+            "description": "Explicit consent to replacing contracts used by live admitted emitters."
           },
           "force": {
             "type": "boolean",
@@ -40968,6 +44148,9 @@
           "absent_metadata_policy": {
             "$ref": "#/components/schemas/AbsentMetadataPolicy",
             "description": "How to handle pack-managed metadata omitted by each release."
+          },
+          "acknowledge_incompatible_rollout": {
+            "type": "boolean"
           },
           "force": {
             "type": "boolean",
@@ -41077,6 +44260,12 @@
             "$ref": "#/components/schemas/ComponentCounts",
             "description": "Registered components by type"
           },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PackDiagnostic"
+            }
+          },
           "install_id": {
             "type": [
               "integer",
@@ -41164,6 +44353,47 @@
             "minimum": 0
           }
         }
+      },
+      "RendererInputApprovalRequest": {
+        "type": "object",
+        "required": [
+          "renderer_execution",
+          "declaration_revision",
+          "source_path",
+          "expression",
+          "grants"
+        ],
+        "properties": {
+          "declaration_revision": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "expression": {
+            "type": "string"
+          },
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PermissionGrantDefinition"
+            }
+          },
+          "renderer_execution": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Convenience target for an already admitted renderer, not a policy target.",
+            "minimum": 1
+          },
+          "source_path": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       },
       "ResolvedWorkQueueDispatchTuningResponse": {
         "type": "object",
@@ -41656,6 +44886,65 @@
           }
         }
       },
+      "RuntimeApprovalResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "subject_pack_id",
+          "issuer_identity_id",
+          "issuer_login",
+          "grants",
+          "approval_digest",
+          "active",
+          "purpose"
+        ],
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "approval_digest": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RbacGrant"
+            }
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "issuer_identity_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "issuer_login": {
+            "type": "string"
+          },
+          "purpose": {
+            "$ref": "#/components/schemas/ApprovalPurpose"
+          },
+          "revoked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "subject_pack_id": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "RuntimeRequirements": {
         "type": "object",
         "description": "Runtime requirements for a pack",
@@ -41699,7 +44988,6 @@
           "ref",
           "name",
           "distributions",
-          "installation",
           "execution_config",
           "created",
           "updated"
@@ -41729,9 +45017,13 @@
             "example": 1
           },
           "installation": {
-            "type": [
-              "object",
-              "null"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Value"
+              }
             ]
           },
           "name": {
@@ -41880,7 +45172,7 @@
         "properties": {
           "definition": {
             "type": "object",
-            "description": "The full workflow definition as JSON (will be serialized to YAML on disk)"
+            "description": "The full workflow definition as JSON. Tasks with a templated action must\ndeclare allowed_action_refs, an array of 1 to 256 literal action refs."
           },
           "description": {
             "type": [
@@ -41973,6 +45265,93 @@
           }
         }
       },
+      "SchemaContractResponse": {
+        "type": "object",
+        "required": [
+          "contract",
+          "semantic_digest"
+        ],
+        "properties": {
+          "contract": {
+            "description": "Self-contained rendering graph. Preserve authored references in editors."
+          },
+          "semantic_digest": {
+            "type": "string"
+          }
+        }
+      },
+      "SchemaPreviewContext": {
+        "type": "string",
+        "enum": [
+          "flat_document",
+          "single_value"
+        ]
+      },
+      "SchemaPreviewRequest": {
+        "type": "object",
+        "required": [
+          "context",
+          "schema"
+        ],
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/SchemaPreviewContext"
+          },
+          "schema": {}
+        },
+        "additionalProperties": false
+      },
+      "SchemaTypeResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "ref",
+          "pack_ref",
+          "label",
+          "schema",
+          "reference_visibility",
+          "reference_allowed_pack_refs"
+        ],
+        "properties": {
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "label": {
+            "type": "string"
+          },
+          "managed_release": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "pack_ref": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "reference_allowed_pack_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reference_visibility": {
+            "type": "string",
+            "description": "Pack-reference policy, not a restriction on authenticated inspection or\nKey schema assignment."
+          },
+          "schema": {}
+        }
+      },
       "SealCacheGenerationRequest": {
         "type": "object",
         "description": "Seal a staging generation into `ready`.",
@@ -42049,6 +45428,28 @@
               }
             ]
           },
+          "config": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Value",
+                "description": "Current configuration projection. Secret fields remain redacted by default."
+              }
+            ]
+          },
+          "config_schema_binding": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Value",
+                "description": "Original contract for the current configuration revision."
+              }
+            ]
+          },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -42103,6 +45504,14 @@
                 "description": "Per-sensor retention policy override for registered stdout/stderr log artifacts."
               }
             ]
+          },
+          "managed_metadata_revision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Current immutable executable/purpose admission over pinned code bytes."
           },
           "pack": {
             "type": [
@@ -42179,6 +45588,21 @@
             "description": "Worker taints tolerated by this sensor process."
           }
         }
+      },
+      "SensorRuntimeRevocationRequest": {
+        "type": "object",
+        "description": "Explicit operational revocation, separate from disablement or human IAM edits.",
+        "properties": {
+          "metadata_revision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Revoke only this immutable revision. Omit to revoke every sensor generation."
+          }
+        },
+        "additionalProperties": false
       },
       "SensorSummary": {
         "type": "object",
@@ -42903,6 +46327,42 @@
           }
         }
       },
+      "TriggerClearOperation": {
+        "type": "string",
+        "enum": [
+          "clear"
+        ]
+      },
+      "TriggerJsonPatch": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "op",
+              "value"
+            ],
+            "properties": {
+              "op": {
+                "$ref": "#/components/schemas/TriggerSetOperation"
+              },
+              "value": {
+                "$ref": "#/components/schemas/Value"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "op"
+            ],
+            "properties": {
+              "op": {
+                "$ref": "#/components/schemas/TriggerClearOperation"
+              }
+            }
+          }
+        ]
+      },
       "TriggerResponse": {
         "type": "object",
         "description": "Response DTO for trigger information",
@@ -42913,6 +46373,7 @@
           "enabled",
           "param_schema",
           "out_schema",
+          "event_config_schema",
           "webhook_enabled",
           "is_adhoc",
           "reference_visibility",
@@ -42938,6 +46399,13 @@
             "type": "boolean",
             "description": "Whether the trigger is enabled",
             "example": true
+          },
+          "event_config_schema": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Flat schema for sensor-supplied event configuration."
           },
           "id": {
             "type": "integer",
@@ -43051,20 +46519,23 @@
           }
         }
       },
+      "TriggerSetOperation": {
+        "type": "string",
+        "enum": [
+          "set"
+        ]
+      },
       "TriggerStringPatch": {
         "oneOf": [
           {
             "type": "object",
             "required": [
-              "value",
-              "op"
+              "op",
+              "value"
             ],
             "properties": {
               "op": {
-                "type": "string",
-                "enum": [
-                  "set"
-                ]
+                "$ref": "#/components/schemas/TriggerSetOperation"
               },
               "value": {
                 "type": "string"
@@ -43078,10 +46549,7 @@
             ],
             "properties": {
               "op": {
-                "type": "string",
-                "enum": [
-                  "clear"
-                ]
+                "$ref": "#/components/schemas/TriggerClearOperation"
               }
             }
           }
@@ -43516,6 +46984,17 @@
               "owner_type"
             ],
             "properties": {
+              "mode": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CacheMode",
+                    "description": "Mode is immutable. Only the current mode may be supplied."
+                  }
+                ]
+              },
               "owner_ref": {
                 "type": [
                   "string",
@@ -43725,8 +47204,29 @@
             "description": "Update the human-readable name",
             "example": "GitHub API Token (Updated)"
           },
+          "rebind_schema": {
+            "type": "boolean",
+            "description": "Explicitly select current installed named revisions and revalidate."
+          },
+          "schema_digest": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "value": {
             "description": "Update the secret value. Can be a string, object, array, number, or boolean."
+          },
+          "value_schema": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Value",
+                "description": "Omit to retain the assigned schema. Null removes it."
+              }
+            ]
           }
         }
       },
@@ -43770,11 +47270,6 @@
       "UpdatePackRequest": {
         "type": "object",
         "description": "Request DTO for updating a pack",
-        "required": [
-          "conf_schema",
-          "config",
-          "meta"
-        ],
         "properties": {
           "conf_schema": {
             "type": [
@@ -43788,7 +47283,14 @@
               "object",
               "null"
             ],
-            "description": "Pack configuration values"
+            "description": "Persistent overrides, replacing each supplied top-level field completely."
+          },
+          "config_reset_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Remove these top-level overrides and use current release defaults. Null is not reset."
           },
           "dependencies": {
             "type": [
@@ -43837,6 +47339,14 @@
               "null"
             ],
             "description": "Pack metadata"
+          },
+          "owner_roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Changing this declaration additionally requires target pack Install authority.\nOmit to preserve; [] clears. Null is not accepted.",
+            "maxItems": 64
           },
           "runtime_deps": {
             "type": [
@@ -43927,6 +47437,16 @@
               "string",
               "null"
             ]
+          },
+          "scope": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PermissionScope"
+              }
+            ]
           }
         }
       },
@@ -44005,14 +47525,6 @@
       "UpdateRuleRequest": {
         "type": "object",
         "description": "Request DTO for updating a rule",
-        "required": [
-          "conditions",
-          "action_params",
-          "trigger_params",
-          "sensor_worker_selector",
-          "sensor_worker_tolerations",
-          "sensor_worker_affinity"
-        ],
         "properties": {
           "action_params": {
             "type": [
@@ -44126,10 +47638,6 @@
       "UpdateRuntimeRequest": {
         "type": "object",
         "description": "Request DTO for updating a runtime.",
-        "required": [
-          "distributions",
-          "execution_config"
-        ],
         "properties": {
           "description": {
             "oneOf": [
@@ -44175,7 +47683,8 @@
             "description": "Display name",
             "example": "Python 3"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "UpdateSensorRequest": {
         "type": "object",
@@ -44202,6 +47711,20 @@
                 "description": "Patch the per-sensor retention policy override for non-log artifacts created by sensor-owned executions."
               }
             ]
+          },
+          "config": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Persistent overrides, replacing each supplied top-level field completely."
+          },
+          "config_reset_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Remove these top-level overrides and use current release defaults. Null is not reset."
           },
           "description": {
             "type": [
@@ -44297,11 +47820,11 @@
       "UpdateTriggerRequest": {
         "type": "object",
         "description": "Request DTO for updating a trigger",
-        "required": [
-          "param_schema",
-          "out_schema"
-        ],
         "properties": {
+          "acknowledge_incompatible_rollout": {
+            "type": "boolean",
+            "description": "Allow a changed live contract despite admitted emitters. Ordinary confirmation is not acknowledgement."
+          },
           "description": {
             "oneOf": [
               {
@@ -44321,6 +47844,17 @@
             "description": "Whether the trigger is enabled",
             "example": true
           },
+          "event_config_schema": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TriggerJsonPatch",
+                "description": "Replace or clear the sensor-supplied event configuration schema."
+              }
+            ]
+          },
           "label": {
             "type": [
               "string",
@@ -44330,18 +47864,26 @@
             "example": "Webhook Trigger (Updated)"
           },
           "out_schema": {
-            "type": [
-              "object",
-              "null"
-            ],
-            "description": "Output schema"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TriggerJsonPatch",
+                "description": "Output schema"
+              }
+            ]
           },
           "param_schema": {
-            "type": [
-              "object",
-              "null"
-            ],
-            "description": "Parameter schema (StackStorm-style with inline required/secret)"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TriggerJsonPatch",
+                "description": "Parameter schema (StackStorm-style with inline required/secret)"
+              }
+            ]
           },
           "reference_allowed_pack_refs": {
             "type": [
@@ -44368,7 +47910,8 @@
               }
             ]
           }
-        }
+        },
+        "additionalProperties": false
       },
       "UpdateWorkQueueItemRequest": {
         "type": "object",
@@ -44576,7 +48119,7 @@
               "object",
               "null"
             ],
-            "description": "Workflow definition"
+            "description": "Workflow definition. A task with a templated action requires a finite\nliteral allowed_action_refs array. Rendered permissions only reduce its\nadmitted per-target ceiling."
           },
           "description": {
             "type": [
@@ -44638,15 +48181,22 @@
         "type": "object",
         "description": "Upload one numbered ingest chunk.",
         "required": [
-          "owner_type",
-          "entries"
+          "owner_type"
         ],
         "properties": {
+          "deleted_external_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Delete these IDs from a staging clone. Missing IDs are harmless."
+          },
           "entries": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CacheEntryUpload"
-            }
+            },
+            "description": "Inserts for a full snapshot, or complete replacement values for a clone."
           },
           "owner_ref": {
             "type": [
@@ -44943,6 +48493,17 @@
               },
               {
                 "$ref": "#/components/schemas/i64"
+              }
+            ]
+          },
+          "schema_binding": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Value",
+                "description": "The item's original admission contract, never the queue's current schema."
               }
             ]
           },
