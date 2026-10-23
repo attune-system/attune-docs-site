@@ -84,10 +84,15 @@ Starlight uses Pagefind for its static search index, and Scalar renders the API
 contract on `/api/`. If the site needs other custom client behavior, use
 Datastar. Do not add React or another SPA framework.
 
+Mermaid fences use the local adapter in `src/integrations/`. It preserves
+diagram source for theme changes and Astro navigation, uses Mermaid's strict
+security mode, and retains the upstream adapter's MIT notice. `npm run verify`
+tests Markdown escaping and integration hooks before building the site.
+
 ## Deploy with Helm
 
 The deployment pulls the public
-`ghcr.io/attune-system/attune-docs-site:0.1.13` image. Add the Attune chart
+`ghcr.io/attune-system/attune-docs-site:0.1.14` image. Add the Attune chart
 repository, then install the chart with `deploy/helm-values.yaml`:
 
 ```bash

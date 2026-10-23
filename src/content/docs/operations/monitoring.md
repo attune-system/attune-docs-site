@@ -16,7 +16,9 @@ Start troubleshooting from the execution, then follow the event, queue, worker, 
 | Worker | Registration, heartbeat, cordon state, runtime verification, execution consume/complete logs. |
 | Sensor | Sensor-worker registration, process supervision state, external polling, event emission logs, stdout/stderr tails. |
 | Notifier | WebSocket auth, LISTEN/NOTIFY subscription, client subscription errors. |
-| PostgreSQL | Connections, hypertable chunk health, migrations, audit/history growth. |
+| PostgreSQL | Connections, native daily partition coverage, DEFAULT backlog, summary refresh backlog, migrations, audit/history growth, WAL, and autovacuum. |
+| Supervisor | Retention lag, partition/summary job schedules, deferred DDL, and cache-generation reclamation. |
+| Immutable object storage | Provider reachability, exact-version availability, failed uploads/deletes, and recovery retention window. |
 | RabbitMQ | Queue depth, consumers, dead letters, publish/ack errors. |
 
 ## Execution troubleshooting path
@@ -96,6 +98,18 @@ POST /api/v1/workers/{id}/uncordon
 | Sensor logs are missing | `artifacts_dir`, sensor log artifact registration, sensor stdout/stderr tail endpoints. |
 
 Managed sensor process state is persisted in `sensor_process`; process state changes are recorded in `sensor_process_history`.
+
+## Database maintenance checks
+
+Use `GET /api/v1/retention-config/native-status` with `retention:read` to inspect partitions, summaries, and durable job schedules. Missing future leaves, DEFAULT backlog, dirty completed hours, and overdue jobs need investigation in supervisor logs. Counts marked `default_count_exact: false` are lower bounds, not full backlog counts. Coverage extrema do not prove that all intervening hours are clean.
+
+Retention reports committed row deletions as `deleted` and committed leaf drops as `partitions_dropped`. Do not add these different units. Monitor database disk headroom, replica lag, dead tuples, and autovacuum alongside cleanup progress. See [Supervisor Operations](/operations/supervisor/#native-partitions-and-hourly-summaries).
+
+## Runtime log storage checks
+
+Deployed workers and sensors must select `artifacts.transport: api` or `volume` explicitly. API transport uses immutable segments in the configured `storage` backend. Volume transport requires the API and writer to see the same file, including working cross-process file locks.
+
+For S3 version or digest failures, check versioning, the configured bucket/prefix, and credentials on every API replica. Restore the exact recorded object version or recover PostgreSQL and storage to the same recoverable point. Do not replace a pinned read with the latest object. See [Backup and Recovery](/operations/backup-and-recovery/#database-and-object-recovery-point).
 
 ## Operational alerts
 

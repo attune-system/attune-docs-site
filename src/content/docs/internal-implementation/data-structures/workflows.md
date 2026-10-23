@@ -25,7 +25,7 @@ All `param_schema` and `out_schema` values persisted for the workflow use Attune
 | `workflow_cache_iteration` | Checkpoints native iteration over a pinned cache generation |
 | `execution.parent` and `execution.workflow_task` | Relate normal execution rows to the workflow and task that created them |
 
-`workflow_definition.definition` is the YAML graph parsed to JSONB. `workflow_execution` has a one-to-one unique link to its parent `execution`. It records current, completed, failed, and skipped task-name arrays; mutable published `variables`; the runtime `task_graph`; status; pause state; and an error message.
+`workflow_definition.definition` is the YAML graph parsed to JSONB. `workflow_execution.execution` is a unique plain `BIGINT` identifying its parent execution, not a foreign key. It may dangle after independent execution retention. Workflow state records current, completed, failed, and skipped task-name arrays; mutable published `variables`; the runtime `task_graph`; status; pause state; and an error message.
 
 Each workflow task runs as a normal child execution. `workflow_task_dispatch` has a unique identity over workflow execution, task name, and `COALESCE(task_index, -1)`. That record prevents duplicate dispatch when the executor retries orchestration work. Cache iteration adds a durable cursor, counts, batch and concurrency settings, and a terminal state without first loading an entire cache generation into workflow context.
 
@@ -33,7 +33,7 @@ Each workflow task runs as a normal child execution. `workflow_task_dispatch` ha
 flowchart TD
     A[action row] --> D[workflow_definition]
     A --> E[parent execution]
-    E --> WE[workflow_execution]
+    E -.->|plain execution ID| WE[workflow_execution]
     WE --> TD[workflow_task_dispatch]
     TD --> CE[child execution]
     WE --> CI[workflow_cache_iteration]
@@ -45,7 +45,9 @@ The pack loader parses the two files, upserts the definition, creates or updates
 
 At run time, the executor creates the parent execution and workflow state, evaluates ready tasks, and creates child executions. Child completion updates task state, publishes transition variables, and may make more tasks ready. Pause, cancellation, retry, item expansion, and cache iteration remain executor concerns; workers only run the resulting action executions.
 
-Deleting a `workflow_definition` cascades to `workflow_execution` and its dispatch records. The `action.workflow_def` foreign key also uses `ON DELETE CASCADE`, so the companion action is deleted. Deleting the parent execution removes its workflow state. Child executions are ordinary execution records and carry lineage independently.
+Deleting a `workflow_definition` cascades to `workflow_execution` and its dispatch records. The `action.workflow_def` foreign key also uses `ON DELETE CASCADE`, so the companion action is deleted. Deleting the parent execution does not remove workflow state through `workflow_execution.execution`; that plain ID supports independent retention. Child executions also carry plain `parent` IDs.
+
+Other runtime links retain their FKs. `workflow_task_dispatch.workflow_execution` cascades with workflow state, and `workflow_task_dispatch.execution_id` cascades when its child execution is deleted. The [workflow wait migration](https://github.com/attune-system/attune/blob/main/migrations/20260919000001_workflow_task_waits.sql) makes `inquiry.created_by_execution` plain, while `inquiry.workflow_execution` cascades with workflow state.
 
 ## Caveats
 

@@ -46,7 +46,7 @@ flowchart TD
 
     subgraph Infrastructure
         direction LR
-        PG[("PostgreSQL / TimescaleDB")]
+        PG[("PostgreSQL 16+")]
         RMQ{{"RabbitMQ"}}
         Files[/"Packs, runtimes, artifacts"/]
     end
@@ -88,7 +88,7 @@ Attune connects external systems to internal automation through loosely coupled 
 - **Artifacts** capture execution outputs such as logs, files, progress updates, URLs, images, and data tables. Retention policies keep artifact storage bounded.
 - **Audit and retention services** record security-relevant activity and keep runtime metadata manageable. The supervisor service applies runtime database retention and corrective maintenance so events, executions, audit rows, queue runtime data, workers, and related operational state do not grow forever.
 
-Attune uses PostgreSQL/TimescaleDB for durable runtime state and time-series history, RabbitMQ for asynchronous work dispatch, and WebSocket notifications for real-time UI updates. Services are modular and can be run with Docker Compose, Kubernetes, or Linux packages depending on deployment needs.
+Attune uses stock PostgreSQL 16+ for durable runtime state and history, RabbitMQ for asynchronous work dispatch, and WebSocket notifications for real-time UI updates. Events, execution history, and audit events use native daily UTC RANGE partitions with DEFAULT partitions. Worker and sensor-process history remain ordinary tables. Compose and CI use PostgreSQL 18; no TimescaleDB extension is required. Services are modular and can be run with Docker Compose, Kubernetes, or Linux packages depending on deployment needs.
 
 ## What's Next?
 

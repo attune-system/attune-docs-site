@@ -9,19 +9,25 @@ The [`attune-docker` repository](https://github.com/attune-system/attune-docker)
 
 ## Install the distribution
 
-Install Git, OpenSSL, Docker Engine, and Docker Compose v2. Then run:
+Install Git, Python 3, OpenSSL, Docker Engine, and Docker Compose v2. Before running the setup commands, verify a coordinated platform release with native PostgreSQL migrations and the ordinary authenticated `pack_publication` contract, revision `authenticated-pack-publication-1`. It also needs a matching core-pack publisher and a provisioned deployment integration token with registrar grants. Publication does not require the separate managed-runtime bootstrap gate.
+
+A compatible published image set has not yet been verified for these instructions. Do not use a historical release or floating tag as a substitute. See the distribution's [image selection requirements](https://github.com/attune-system/attune-docker#required-platform-image-selection).
 
 ```bash
 git clone https://github.com/attune-system/attune-docker.git attune-docker
 cd attune-docker
-./scripts/create-env.sh
+ATTUNE_IMAGE_TAG='<verified-compatible-platform-tag>' ./scripts/create-env.sh
+# Configure matching core pins and the provisioned deployment token in .env.
+python3 scripts/check-image-selection.py --env-file .env
 docker compose pull
 docker compose up -d
 ```
 
 The setup script creates `.env` with random JWT, encryption, and agent-bootstrap secrets. Change `ATTUNE_TEST_PASSWORD` in that file before the first startup if you do not want the default development password.
 
-The Compose file pulls images from `ghcr.io/attune-system`. Set `ATTUNE_IMAGE_TAG` in `.env` to use another published image set, and keep every Attune image on the same tag.
+The Compose file pulls images from `ghcr.io/attune-system`. Set `ATTUNE_IMAGE_TAG` in `.env` to an explicitly verified compatible platform release. Keep platform service images aligned; the core-pack publisher uses its own `ATTUNE_INIT_PACKS_IMAGE_TAG` and matching core version/digest. Image-selection checks validate configuration and known incompatibilities, not publication or runtime support. Run them explicitly for existing `.env` files before pulling or starting containers.
+
+The current Compose definition uses stock PostgreSQL 18 and a new `postgres_data_plain_pg18` volume. Compose prefixes its actual name with the project name. The separate volume leaves the former `postgres_data_pg18` TimescaleDB data untouched; it does not copy or convert that data. These instructions target a fresh database.
 
 ## Start and stop
 
@@ -40,8 +46,11 @@ docker compose logs -f executor worker-shell sensor notifier
 
 To update the distribution and its images:
 
+Check the release's database and publication requirements before using this update sequence. Current application migrations target fresh stock PostgreSQL installations, not automatic conversion of populated TimescaleDB databases. Do not swap an old TimescaleDB volume under a stock PostgreSQL image or bypass migration checksum validation. Preserve all existing data and backups until a separate conversion is tested. See [Deployment Overview](/operations/deployment/#fresh-installs-and-existing-databases).
+
 ```bash
 git pull --ff-only
+python3 scripts/check-image-selection.py --env-file .env
 docker compose pull
 docker compose up -d
 ```
@@ -167,6 +176,8 @@ docker compose down
 - Packs are mounted through volumes, not copied into service images.
 - Runtime environments live in `runtime_envs`.
 - File artifacts live in `artifacts_data`.
+- Preserve the configured immutable blob backend separately from file artifacts. The application repository's Compose uses `blobs_data` for immutable bodies and log segments; check the public distribution's configuration and volume names for the release you install.
+- Database resets must target only an explicitly identified disposable database volume. Do not remove pack, artifact, blob, or runtime-environment volumes as a database-reset shortcut.
 - Workers need read-only pack access and read/write runtime/artifact access.
 - API needs read/write pack/artifact access, write access to `runtime_envs`, and read-only agent binary access.
 
