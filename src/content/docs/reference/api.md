@@ -53,6 +53,7 @@ Errors include an error message/code and appropriate HTTP status.
 | Packs | List, show, create, configure, upload, register, install, download, test, delete. |
 | Pack indices | Configure and browse registry/index sources. |
 | Actions | List, show, create/update/delete, search, queue stats. |
+| Policies | List and administer standard execution policies and shared resource concurrency pools. |
 | Executions | Request action execution, lifecycle, search, cancel, parent filtering, logs, history. |
 | Dashboards | List/show/create/update/delete/clone dashboards, preview draft specs, source catalog, and runtime data queries. |
 | Workflows | Upload/save workflow files, list/show/delete workflow actions. |
@@ -87,6 +88,8 @@ historical versions:
 - [Interactive API explorer](/api/)
 - [Available versions](/openapi/versions.json)
 
+The latest snapshot describes API `0.10.0`, including `ResourceConcurrency`, `ResourceParticipant`, and the `resource_concurrency` fields on policy requests and responses. The `0.9.0` contract remains available in the version selector.
+
 The running API also serves Swagger UI at `/docs` and live OpenAPI JSON at
 `/api-spec/openapi.json`. To refresh this site's snapshot, export the contract
 from Attune and import it into this repository:
@@ -101,9 +104,23 @@ When the API version changes, the importer archives the previous contract at
 `/openapi/versions/<version>.json`. Use the version selector in the API explorer
 to open an older contract.
 
-The Web UI client can be regenerated from the running API.
+After an API contract or platform/API version change, run `npm run generate:api` and `npm run check:api` from Attune's `web/` directory. Both the exported document's `info.version` and the generated client's `VERSION` must match the workspace package version. Commit the generated client changes; Attune's exported `web/openapi.json` is ignored build output, while this documentation site's imported `public/openapi.json` is version-controlled.
 
 Do not hand-edit generated clients. Update API DTOs/routes and regenerate.
+
+## Policy administration endpoints
+
+`0.10.0` extends the existing policy API; it does not add a separate resource-lock service or endpoint family.
+
+| Operation | Endpoint |
+| --- | --- |
+| List | `GET /api/v1/policies` |
+| Create | `POST /api/v1/policies` |
+| Detail | `GET /api/v1/policies/{ref}` |
+| Update | `PUT /api/v1/policies/{ref}` |
+| Delete | `DELETE /api/v1/policies/{ref}` |
+
+Create and update requests accept `resource_concurrency` with `namespace`, `limit`, `method`, and participant action/path mappings. Policy responses expose that object separately from standard `concurrency`. Shared policies require global or pack ownership scope and cannot contain standard controls. See [the complete request example](/administration/shared-resource-concurrency/#api-configuration) and the [API explorer](/api/).
 
 ## Auth and RBAC expectations
 

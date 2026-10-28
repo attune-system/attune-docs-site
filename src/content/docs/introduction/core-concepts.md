@@ -56,9 +56,11 @@ Execution statuses include requested, scheduling, scheduled, running, completed,
 
 ## Policies
 
-A **policy** controls execution throughput and limits. Policies can be global, pack-scoped, or action-scoped. Attune resolves one effective policy per execution: action policies override pack policies, pack policies override global policies, and higher priority wins within the same scope.
+A **policy** controls execution throughput and limits. Standard policies can be global, pack-scoped, or action-scoped. Attune resolves one effective standard concurrency policy per execution: action policies override pack policies, pack policies override global policies, and higher priority wins within the same scope.
 
 Policies can configure concurrency limits, rate limits, and supported quota checks. Administrators can manage them in the web UI under **Policies**. See [Policy Administration](/administration/policies/).
+
+A **shared resource policy**, added in `0.10.0`, limits different participating actions together using a resource identifier from each action's parameters. For example, deployment and validation actions can share one slot per Salesforce organization, even when their parameter names differ. The shared constraint is additional to standard concurrency and applies across executor replicas and workflow instances. See [Shared resource concurrency](/administration/shared-resource-concurrency/).
 
 ## Workflows
 

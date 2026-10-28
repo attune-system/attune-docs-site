@@ -226,6 +226,16 @@ array in `item`; `index` is the batch number. For large persisted datasets, use
 [Iterating Data Caches in Workflows](/pack-development/cache-iteration/) rather
 than first materializing a cache into workflow context.
 
+## Shared resource limits across workflows
+
+Task `concurrency` controls item or cache-batch fan-out within that task. It does not coordinate unrelated workflow instances or actions.
+
+In `0.10.0`, [shared resource policies](/administration/shared-resource-concurrency/) can limit participating child actions by an organization, tenant, or other scalar resource identifier. Pass that identifier through the child's normal flat input parameters. Children from independent workflows then share the same pool, even when their action definitions use different parameter names.
+
+Each participating child acquires capacity independently. The parent holds no shared slot unless the workflow action itself explicitly participates. A pre-start failure that reverts the parent to `requested` releases its reservations atomically; errors after it becomes `running` retain capacity until terminal state because child operations may still be in flight.
+
+Avoid assigning the same limit-1 resource to both a parent and children that must run while the parent holds it.
+
 ## Cancellation policy
 
 Set graph-level `cancellation_policy` to `allow_finish` (default) to stop pending dispatch while allowing running children to finish, or `cancel_running` to cancel running and pending children. Visual-builder/API save and load paths preserve either value.

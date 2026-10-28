@@ -36,6 +36,10 @@ The event path reloads an event by ID, finds matching enabled rules, evaluates c
 
 Completion is a separate path. Workers publish status changes for lifecycle observation and `ExecutionCompleted` for downstream accounting. `CompletionListener` reloads execution state, releases policy and work-queue capacity, and advances workflow tasks. Workflow graphs, transition conditions, retries, item iteration, cache iteration, and inquiry waits all remain executor concerns. The scheduler keeps bounded action metadata caches, while per-replica ephemeral metadata messages invalidate changed actions.
 
+In `0.10.0`, shared resource admission adds a durable PostgreSQL reservation alongside the effective standard concurrency constraint. The scheduler acquires both before dispatch. It resolves each participating action's resource parameter path after locking the policy, so concurrent policy edits cannot leave admission using a stale mapping. See [policy storage and locking](/internal-implementation/data-structures/policies/#shared-admission-storage-and-locking).
+
+Shared reservations are released by the database terminal-state trigger, independently of completion-message delivery. A pre-start workflow error can atomically return the parent to `requested` and release its reservation; an error after `running` retains capacity because child work may be in flight. The supervisor republishes eligible shared waiters for fresh admission, rather than promoting them through the standard slot-release path alone.
+
 ## Inbound and outbound interfaces
 
 The executor has no public HTTP server. Its inbound interface is RabbitMQ plus periodic PostgreSQL scans. Fixed durable queues carry events, enforcements, execution requests, status changes, completions, inquiry responses, and pack tests. A broker-named ephemeral queue carries action metadata invalidations. Timers drive inquiry timeout checks, worker heartbeat checks, scheduled-execution timeout checks, and work-queue dispatch.

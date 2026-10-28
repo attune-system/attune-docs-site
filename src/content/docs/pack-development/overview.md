@@ -88,6 +88,8 @@ The pack loader deploys these metadata files from an installed pack:
 | Sensors | `sensors/*.yaml` | Sensor metadata, runtime selection, config schema, and emitted trigger refs. |
 | Cache namespaces | `caches/*.yaml` | Pack-managed Data Cache namespace policies loaded after action and sensor owners exist. |
 
+Policies can also define [shared resource concurrency](/administration/shared-resource-concurrency/) in `0.10.0`. A pack-owned shared policy can include actions from other packs, with a separate scalar parameter path for each participant. Keep standard execution controls in separate policy definitions and ensure participant actions exist before enabling the shared policy.
+
 Pack-loaded rules are declarative and non-ad-hoc. API/UI-created rules remain ad-hoc and are preserved separately. Keys, identities, role assignments, and pack configuration values are environment data; document them in the pack README or install guide rather than committing secrets or environment-specific assignments to the pack.
 
 ### Pack icon

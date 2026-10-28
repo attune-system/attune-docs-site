@@ -77,6 +77,21 @@ Run AI agents with execution-scoped tokens, not full user credentials. Prefer:
 - `standard` plus narrowly scoped named permission sets.
 - Private artifacts for sensitive prompts/results.
 
+## Dependency advisories in 0.10.0
+
+The release retains explicit risk acceptance for two dependency advisories:
+
+| Advisory | Status |
+| --- | --- |
+| [RUSTSEC-2026-0387](https://rustsec.org/advisories/RUSTSEC-2026-0387.html), `crypto-bigint` timing variability | Fixed upstream in `crypto-bigint >=0.7.6`, but the JWT/OIDC dependency graph still resolves to `0.5.5`. `elliptic-curve 0.14.3` uses a patched version, but published authentication dependencies still require older curve packages. |
+| [RUSTSEC-2023-0071](https://rustsec.org/advisories/RUSTSEC-2023-0071.html), RSA timing side channels | The RustSec advisory has no patched version range. It is separate from the `crypto-bigint` finding. |
+
+These exceptions in `deny.toml` are risk acceptances, not fixes. Cargo Deny can pass with them present. The `crypto-bigint` exception is scheduled for review by **November 22, 2026**; that date is documented, not an automatically enforced expiry.
+
+Before removing the exception, ensure the full dependency graph contains no affected `crypto-bigint` copies, run authentication regression tests, and rerun Cargo Deny. An updated elliptic-curve release alone does not replace copies pinned by its parent dependencies, and resolving this advisory does not resolve the separate RSA advisory.
+
+Review the deployment's cryptographic operations and exposure rather than treating successful CI as evidence that vulnerable code has been removed. Source: [0.10.0 dependency policy](https://github.com/attune-system/attune/blob/f2eb41cd65474a1df451aa7c0dd339237582096e/deny.toml).
+
 ## Incident checklist
 
 1. Identify affected identities, tokens, packs, keys, executions, and artifacts.

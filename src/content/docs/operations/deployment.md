@@ -59,6 +59,18 @@ Keep API, executor, supervisor, notifier, web, agent, migration, and user-initia
 
 Core publication uses the ordinary authenticated registrar contract advertised as `pack_publication` by `/health/ready`, revision `authenticated-pack-publication-1`. It does not require the separate managed-runtime `bootstrap_admission` gate to be enabled. Provision the deployment integration credential through the supported operator process; publication does not create identities, assign administrator access, or bypass authorization.
 
+## Upgrade from 0.9.0 to 0.10.0
+
+For a database at the compatible `0.9.0` schema, `0.10.0` adds the forward migration `20261025000001_shared_resource_concurrency.sql`. It extends policies and adds shared participant and execution-admission tables. Run the normal migration job before updated services start; do not reset the database or rewrite applied checksums for this upgrade.
+
+Keep the API, web client, executor, supervisor, and migration image versions aligned. Drain or stop `0.9.0` executor instances before enabling shared policies, because old executors do not enforce the new resource constraint. A newly enabled policy does not retroactively acquire reservations for operations already dispatched, so drain those operations first when strict exclusion is required.
+
+Shared waiting-work recovery uses the supervisor's existing requested-execution republisher. Keep that service and its RabbitMQ publisher enabled. After rollout, verify a same-resource pair waits or cancels as configured, while a different resource can run concurrently.
+
+The platform version is `0.10.0`, the bundled core pack is `1.0.5`, and the independently versioned timer sensor remains `0.7.4`. Core administrator assignments still reference `core.admin`; platform catalog revision `3` supplies the updated supported grants during reconciliation. Review custom operator grants separately rather than granting everyone administrator access.
+
+See [What's new in 0.10.0](/introduction/whats-new-0-10/) and [shared policy lifecycle behavior](/administration/shared-resource-concurrency/#change-or-disable-a-shared-policy). The guidance below still applies to older or incompatible pre-production schemas.
+
 ## Fresh installs and existing databases
 
 The current canonical migrations target an empty stock PostgreSQL database. They do not convert a populated TimescaleDB or older pre-production schema. Startup validates migration checksums and never resets a database or rewrites its recorded checksums.

@@ -26,6 +26,8 @@ An identity can represent a person or service account. Local identities have `pa
 
 Permission-set refs use `pack.name` form. `grants` is a JSON array parsed into the canonical `Grant` type. A grant names one `resource`, a list of `actions`, and optional constraints. Resources include packs, actions, queues, queue items, executions, keys, caches, artifacts, identities, permissions, and other API concepts. Actions include `read`, `create`, `update`, `delete`, `execute`, `manage`, and `decrypt` where meaningful.
 
+In `0.10.0`, `Resource::ALL` and `Resource::supported_actions()` are the canonical resource/action vocabulary used by API permission validation. The web editor's grant options are tested against that same contract. Catalog revision `3` defines `core.admin` with one unconstrained grant per resource covering exactly its supported actions, including operational disclosure and event publication. This does not remove resource-specific token or secret-origin checks. See [administrator changes](/administration/permissions-and-rbac/#administrator-permissions-in-0100).
+
 Constraints are conjunctive within one grant. Available fields include pack refs, owner rules, owner types and refs, visibility, execution scope, target refs and IDs, encrypted status, and exact identity attributes. Multiple matching grants are additive because authorization succeeds when any grant allows the requested resource and action. There is no explicit deny grant. The source type and evaluator are in [`rbac.rs`](https://github.com/attune-system/attune/blob/main/crates/common/src/rbac.rs).
 
 ## Effective grants

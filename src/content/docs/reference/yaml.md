@@ -155,7 +155,43 @@ grants:
       owner_refs: [my_pack, my_pack.agent_triage]
 ```
 
-Supported grant resources include `packs`, `actions`, `queues`, `queue_items`, `rules`, `triggers`, `executions`, `events`, `enforcements`, `inquiries`, `keys`, `artifacts`, `runtimes`, `workers`, `identities`, `permissions`, and `audit_log`.
+Supported grant resources are `packs`, `actions`, `policies`, `queues`, `queue_items`, `rules`, `triggers`, `executions`, `events`, `enforcements`, `inquiries`, `keys`, `caches`, `artifacts`, `runtimes`, `workers`, `dashboards`, `retention`, `identities`, `permissions`, and `audit_log`. Actions vary by resource; the API rejects unsupported pairs. See [permission editor coverage](/administration/permissions-and-rbac/#permission-editor-coverage).
+
+## Execution policies
+
+Standard policy at `policies/deploy_concurrency.yaml`:
+
+```yaml
+ref: deploy_concurrency
+name: Deployment concurrency
+action_ref: my_pack.deploy
+enabled: true
+concurrency:
+  limit: 10
+  method: enqueue
+  parameters: [region]
+```
+
+Shared resource policy at `policies/salesforce_org_concurrency.yaml`, available in `0.10.0`:
+
+```yaml
+ref: salesforce_org_concurrency
+name: Salesforce organization concurrency
+enabled: true
+resource_concurrency:
+  namespace: salesforce_org
+  limit: 1
+  method: enqueue
+  participants:
+    - action: salesforce.deploy_metadata
+      resource_parameter: org_id
+    - action: salesforce.update_configuration
+      resource_parameter: organization_id
+```
+
+The loader qualifies the policy's local ref with its owning pack. Participant action refs are fully qualified and can span packs. Their parameter paths resolve from the flat execution config, and enabled participants must already exist. Do not add `action_ref`, standard `concurrency`, rate limits, or quotas to the shared policy itself. It is an additional constraint alongside the effective standard policy, not another candidate in standard scope/priority selection.
+
+An action can belong to only one enabled shared policy. Missing or invalid resource identifiers fail admission. For scalar types, queueing, lifecycle restrictions, and workflow behavior, see [Shared resource concurrency](/administration/shared-resource-concurrency/).
 
 ## Runtime
 

@@ -26,6 +26,30 @@ audit_log:read
 
 Permissions can be constrained by fields such as owner, pack ref, component ref, IDs, or visibility. For sensitive resources, broad unconstrained grants are intentionally not enough to access another owner's private data.
 
+## Administrator permissions in 0.10.0
+
+Platform catalog revision `3` completes the bundled `core.admin` permission set. Existing assignments continue to refer to `core.admin`; catalog reconciliation supplies its updated definition. The set now includes every action supported for each resource, including these previously omitted grants:
+
+| Resource | Added authority |
+| --- | --- |
+| Packs | `packs:decrypt` |
+| Work queues and queue items | `queues:decrypt`, `queue_items:decrypt` |
+| Rules and triggers | `rules:decrypt`, `triggers:decrypt` |
+| Inquiries and artifacts | `inquiries:decrypt`, `artifacts:decrypt` |
+| Events | `events:create` |
+
+For example, administrators can author event-publication grants and use supported operational disclosure paths without creating replacement permission sets to fill those omissions. Prefer constrained grants for operators who do not need full administrator access. Trigger disclosure authority is relevant to protected logs from SDK-capable sensor generations; it does not mean every log line contains a secret.
+
+Grant coverage does not bypass token-type restrictions, row visibility, or recorded secret-origin checks. Read authority and decrypt authority remain separate.
+
+### Permission editor coverage
+
+The grant editor and display views now use the backend's resource/action vocabulary. The editor includes **Policies**, **Queue Items**, **Dashboards**, and **Data Retention**, and can preserve supported disclosure actions when grants are edited.
+
+Choose only actions supported by the selected resource. For example, `permissions` accepts `read` and `manage`, `workers` accepts `read` and `manage`, and `caches` accepts `read`, `create`, `update`, and `delete`, not `decrypt`. The older `sensors`, `webhooks`, `analytics`, and `history` editor labels are not independent RBAC resources.
+
+The API rejects unsupported resource/action pairs. Review existing custom definitions against the current API contract instead of assuming every resource supports generic create/update/delete actions.
+
 ## Row-level read visibility
 
 Attune read/list/search endpoints are authenticated, then row-filtered. Calling an endpoint and seeing data are separate concerns.

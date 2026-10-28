@@ -92,6 +92,14 @@ For API-backed artifacts and runtime logs, monitor object-backend request rates,
 
 Docker builds use optimized Dockerfiles with selective crate copying and BuildKit cache mounts. Keep cache strategy and `RUST_MIN_STACK` settings when modifying Dockerfiles.
 
+## Shared resource admission across executors
+
+In `0.10.0`, [shared resource policies](/administration/shared-resource-concurrency/) coordinate participating actions through PostgreSQL-backed, execution-owned reservations. Adding executor replicas does not multiply a resource group's capacity. Different resource identifiers have independent running capacity, although short admission transactions briefly serialize on the shared policy row.
+
+When executions wait despite idle workers, check the effective standard constraint and shared resource owner before increasing worker counts. Waiting requests consume no shared capacity. Eligible requests resume through supervisor recovery, which requires a working RabbitMQ publisher and can add the configured recovery grace period to dispatch latency.
+
+Reservations end at terminal execution state, not at the instant cancellation is requested. A worker lost during external IO may leave unknown side effects even after abandonment frees capacity; resource limits are not fencing tokens or exactly-once guarantees.
+
 ## Related
 
 - [Monitoring and Troubleshooting](/operations/monitoring/)
