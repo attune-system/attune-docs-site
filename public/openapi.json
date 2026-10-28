@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.9.0"
+    "version": "0.10.0"
   },
   "servers": [
     {
@@ -28092,6 +28092,16 @@
               "ref": {
                 "type": "string"
               },
+              "resource_concurrency": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ResourceConcurrency"
+                  }
+                ]
+              },
               "retired_at": {
                 "type": [
                   "string",
@@ -34176,6 +34186,16 @@
           "ref": {
             "type": "string",
             "example": "core.limit_echo"
+          },
+          "resource_concurrency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResourceConcurrency"
+              }
+            ]
           },
           "scope": {
             "$ref": "#/components/schemas/PolicyScopeRequest"
@@ -41608,6 +41628,16 @@
                 "ref": {
                   "type": "string"
                 },
+                "resource_concurrency": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ResourceConcurrency"
+                    }
+                  ]
+                },
                 "retired_at": {
                   "type": [
                     "string",
@@ -43292,6 +43322,16 @@
           "ref": {
             "type": "string"
           },
+          "resource_concurrency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResourceConcurrency"
+              }
+            ]
+          },
           "retired_at": {
             "type": [
               "string",
@@ -43455,6 +43495,16 @@
           },
           "ref": {
             "type": "string"
+          },
+          "resource_concurrency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResourceConcurrency"
+              }
+            ]
           },
           "retired_at": {
             "type": [
@@ -44417,6 +44467,50 @@
             "minimum": 0
           }
         }
+      },
+      "ResourceConcurrency": {
+        "type": "object",
+        "required": [
+          "namespace",
+          "limit",
+          "method",
+          "participants"
+        ],
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "method": {
+            "$ref": "#/components/schemas/PolicyMethod"
+          },
+          "namespace": {
+            "type": "string"
+          },
+          "participants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResourceParticipant"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResourceParticipant": {
+        "type": "object",
+        "required": [
+          "action",
+          "resource_parameter"
+        ],
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "resource_parameter": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       },
       "RetentionConfig": {
         "type": "object",
@@ -47508,6 +47602,16 @@
               },
               {
                 "$ref": "#/components/schemas/RateLimitPolicyRequest"
+              }
+            ]
+          },
+          "resource_concurrency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResourceConcurrency"
               }
             ]
           },
