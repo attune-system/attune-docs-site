@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.10.0"
+    "version": "0.10.1"
   },
   "servers": [
     {
@@ -13481,6 +13481,7 @@
                           "position",
                           "enabled",
                           "headers",
+                          "source_headers",
                           "created",
                           "updated"
                         ],
@@ -13508,6 +13509,10 @@
                           "position": {
                             "type": "integer",
                             "format": "int32"
+                          },
+                          "source_headers": {
+                            "type": "object",
+                            "description": "Exact source origins mapped to redacted archive/Git request headers."
                           },
                           "updated": {
                             "type": "string",
@@ -13594,6 +13599,7 @@
                         "position",
                         "enabled",
                         "headers",
+                        "source_headers",
                         "created",
                         "updated"
                       ],
@@ -13621,6 +13627,10 @@
                         "position": {
                           "type": "integer",
                           "format": "int32"
+                        },
+                        "source_headers": {
+                          "type": "object",
+                          "description": "Exact source origins mapped to redacted archive/Git request headers."
                         },
                         "updated": {
                           "type": "string",
@@ -13952,6 +13962,7 @@
                         "position",
                         "enabled",
                         "headers",
+                        "source_headers",
                         "created",
                         "updated"
                       ],
@@ -13979,6 +13990,10 @@
                         "position": {
                           "type": "integer",
                           "format": "int32"
+                        },
+                        "source_headers": {
+                          "type": "object",
+                          "description": "Exact source origins mapped to redacted archive/Git request headers."
                         },
                         "updated": {
                           "type": "string",
@@ -33944,6 +33959,10 @@
             "description": "Optional explicit search order position. Omit to append to the end.",
             "example": 0
           },
+          "source_headers": {
+            "type": "object",
+            "description": "Exact HTTPS origins mapped to source-specific archive/Git headers."
+          },
           "url": {
             "type": "string",
             "example": "https://registry.example.com/attune/index.json"
@@ -47352,6 +47371,13 @@
               "null"
             ],
             "format": "int32"
+          },
+          "source_headers": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Omit to preserve existing source headers; use {} to clear them."
           },
           "url": {
             "type": [
