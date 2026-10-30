@@ -92,7 +92,7 @@ tests Markdown escaping and integration hooks before building the site.
 ## Deploy with Helm
 
 The deployment pulls the public
-`ghcr.io/attune-system/attune-docs-site:0.1.16` image. Add the Attune chart
+`ghcr.io/attune-system/attune-docs-site:0.1.17` image. Add the Attune chart
 repository, then install the chart with `deploy/helm-values.yaml`:
 
 ```bash
