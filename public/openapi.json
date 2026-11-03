@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.10.1"
+    "version": "0.10.2"
   },
   "servers": [
     {
@@ -2549,16 +2549,16 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
-            "description": "Page number (1-based)",
+            "description": "Opaque continuation bound to this endpoint and its filters.",
             "required": false,
             "schema": {
-              "type": "integer",
-              "format": "int32",
-              "minimum": 1
-            },
-            "example": 1
+              "type": [
+                "string",
+                "null"
+              ]
+            }
           },
           {
             "name": "per_page",
@@ -2576,14 +2576,17 @@
         ],
         "responses": {
           "200": {
-            "description": "List of artifacts",
+            "description": "Metadata-visible cursor page",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedResponse_ArtifactSummary"
+                  "$ref": "#/components/schemas/ArtifactCursorPage_ArtifactSummary"
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid cursor or page size"
           }
         },
         "security": [
@@ -3870,6 +3873,20 @@
         "operationId": "download_latest",
         "parameters": [
           {
+            "name": "version_id",
+            "in": "query",
+            "description": "Expected immutable version ID. A deleted/recreated version with the same\nversion number must not be substituted. Omit for number/latest selection.",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
             "name": "id",
             "in": "path",
             "description": "Artifact ID",
@@ -4098,6 +4115,20 @@
         "operationId": "stream_artifact",
         "parameters": [
           {
+            "name": "version_id",
+            "in": "query",
+            "description": "Expected immutable version ID. A deleted/recreated version with the same\nversion number must not be substituted. Omit for number/latest selection.",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
             "name": "id",
             "in": "path",
             "description": "Artifact ID",
@@ -4148,15 +4179,15 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "format": "int32",
-              "minimum": 1
-            },
-            "example": 1
+              "type": [
+                "string",
+                "null"
+              ]
+            }
           },
           {
             "name": "per_page",
@@ -4173,11 +4204,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Visible versions with exact totals",
+            "description": "Visible version metadata cursor page",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedResponse_ArtifactVersionSummary"
+                  "$ref": "#/components/schemas/ArtifactCursorPage_ArtifactVersionSummary"
                 }
               }
             }
@@ -4581,6 +4612,20 @@
         "operationId": "get_latest_version",
         "parameters": [
           {
+            "name": "version_id",
+            "in": "query",
+            "description": "Expected immutable version ID. A deleted/recreated version with the same\nversion number must not be substituted. Omit for number/latest selection.",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
             "name": "id",
             "in": "path",
             "description": "Artifact ID",
@@ -4952,6 +4997,20 @@
         "operationId": "get_version",
         "parameters": [
           {
+            "name": "version_id",
+            "in": "query",
+            "description": "Expected immutable version ID. A deleted/recreated version with the same\nversion number must not be substituted. Omit for number/latest selection.",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
             "name": "id",
             "in": "path",
             "description": "Artifact ID",
@@ -5188,6 +5247,20 @@
         "description": "For file-backed versions, reads from the shared artifact volume on disk.\nFor DB-stored versions, reads from the BYTEA/JSON content column.",
         "operationId": "download_version",
         "parameters": [
+          {
+            "name": "version_id",
+            "in": "query",
+            "description": "Expected immutable version ID. A deleted/recreated version with the same\nversion number must not be substituted. Omit for number/latest selection.",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64",
+              "minimum": 1
+            }
+          },
           {
             "name": "id",
             "in": "path",
@@ -8869,7 +8942,7 @@
         "tags": [
           "artifacts"
         ],
-        "summary": "List a disclosure-eligible page of artifacts for a given execution.",
+        "summary": "List metadata and the highest exact-execution version for each artifact.",
         "operationId": "list_artifacts_by_execution",
         "parameters": [
           {
@@ -8883,15 +8956,15 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "format": "int32",
-              "minimum": 1
-            },
-            "example": 1
+              "type": [
+                "string",
+                "null"
+              ]
+            }
           },
           {
             "name": "per_page",
@@ -8924,11 +8997,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Eligible artifacts with exact totals",
+            "description": "Execution-selected metadata cursor page",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedResponse_ArtifactSummary"
+                  "$ref": "#/components/schemas/ArtifactCursorPage_ArtifactSummary"
                 }
               }
             }
@@ -30724,6 +30797,195 @@
           "runtime_log"
         ]
       },
+      "ArtifactCursorPage_ArtifactSummary": {
+        "type": "object",
+        "description": "Count-free v1 artifact collection response. Pages are not historical snapshots.",
+        "required": [
+          "items",
+          "has_more"
+        ],
+        "properties": {
+          "has_more": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "Simplified artifact for list endpoints",
+              "required": [
+                "id",
+                "ref",
+                "type",
+                "visibility",
+                "classification",
+                "scope",
+                "owner",
+                "created",
+                "updated"
+              ],
+              "properties": {
+                "classification": {
+                  "$ref": "#/components/schemas/ArtifactClassification",
+                  "description": "Classification used to distinguish runtime log artifacts from general artifacts."
+                },
+                "content_type": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "MIME content type"
+                },
+                "created": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Creation timestamp"
+                },
+                "id": {
+                  "type": "integer",
+                  "format": "int64",
+                  "description": "Artifact ID"
+                },
+                "name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Human-readable name"
+                },
+                "owner": {
+                  "type": "string",
+                  "description": "Owner identifier"
+                },
+                "ref": {
+                  "type": "string",
+                  "description": "Artifact reference"
+                },
+                "scope": {
+                  "$ref": "#/components/schemas/OwnerType",
+                  "description": "Owner scope"
+                },
+                "selected_version": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ArtifactVersionSummary",
+                      "description": "Highest version for the requested execution; null for global browsing."
+                    }
+                  ]
+                },
+                "size_bytes": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "int64",
+                  "description": "Display size: execution-selected when scoped; omitted for global runtime logs."
+                },
+                "type": {
+                  "$ref": "#/components/schemas/ArtifactType",
+                  "description": "Artifact type"
+                },
+                "updated": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Last update timestamp"
+                },
+                "visibility": {
+                  "$ref": "#/components/schemas/ArtifactVisibility",
+                  "description": "Visibility level"
+                }
+              }
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "ArtifactCursorPage_ArtifactVersionSummary": {
+        "type": "object",
+        "description": "Count-free v1 artifact collection response. Pages are not historical snapshots.",
+        "required": [
+          "items",
+          "has_more"
+        ],
+        "properties": {
+          "has_more": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "Simplified version for list endpoints",
+              "required": [
+                "id",
+                "version",
+                "created"
+              ],
+              "properties": {
+                "content_type": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "MIME content type"
+                },
+                "created": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Creation timestamp"
+                },
+                "created_by": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Reserved; arbitrary creator metadata is never exposed by summaries."
+                },
+                "execution": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "int64",
+                  "description": "Execution that produced this version"
+                },
+                "id": {
+                  "type": "integer",
+                  "format": "int64",
+                  "description": "Version ID"
+                },
+                "size_bytes": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "int64",
+                  "description": "Size of content in bytes"
+                },
+                "version": {
+                  "type": "integer",
+                  "format": "int32",
+                  "description": "Version number"
+                }
+              }
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
       "ArtifactJsonPatch": {
         "oneOf": [
           {
@@ -30851,13 +31113,24 @@
             "$ref": "#/components/schemas/OwnerType",
             "description": "Owner scope"
           },
+          "selected_version": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ArtifactVersionSummary",
+                "description": "Highest version for the requested execution; null for global browsing."
+              }
+            ]
+          },
           "size_bytes": {
             "type": [
               "integer",
               "null"
             ],
             "format": "int64",
-            "description": "Size of latest version in bytes"
+            "description": "Display size: execution-selected when scoped; omitted for global runtime logs."
           },
           "type": {
             "$ref": "#/components/schemas/ArtifactType",
@@ -30979,16 +31252,6 @@
           "created"
         ],
         "properties": {
-          "body_state": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/ArtifactBodyState"
-              }
-            ]
-          },
           "content_type": {
             "type": [
               "string",
@@ -31006,7 +31269,7 @@
               "string",
               "null"
             ],
-            "description": "Who created this version"
+            "description": "Reserved; arbitrary creator metadata is never exposed by summaries."
           },
           "execution": {
             "type": [
@@ -31016,35 +31279,10 @@
             "format": "int64",
             "description": "Execution that produced this version"
           },
-          "file_path": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Relative file path for disk-backed versions"
-          },
           "id": {
             "type": "integer",
             "format": "int64",
             "description": "Version ID"
-          },
-          "object_key": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "provider_version": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "sha256": {
-            "type": [
-              "string",
-              "null"
-            ]
           },
           "size_bytes": {
             "type": [
@@ -38362,7 +38600,8 @@
         "enum": [
           "partition",
           "summary",
-          "retention"
+          "retention",
+          "object_retention"
         ]
       },
       "MaintenanceScheduleStatus": {
@@ -38372,6 +38611,13 @@
           "next_due"
         ],
         "properties": {
+          "deferred_since": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
           "job": {
             "$ref": "#/components/schemas/MaintenanceJob"
           },
@@ -40192,211 +40438,6 @@
                   "format": "int64",
                   "description": "Workflow definition ID (non-null if this action is a workflow)",
                   "example": 42
-                }
-              }
-            },
-            "description": "The page items"
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationMeta",
-            "description": "Pagination metadata"
-          }
-        }
-      },
-      "PaginatedResponse_ArtifactSummary": {
-        "type": "object",
-        "description": "Paginated response wrapper",
-        "required": [
-          "items",
-          "pagination"
-        ],
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "description": "Simplified artifact for list endpoints",
-              "required": [
-                "id",
-                "ref",
-                "type",
-                "visibility",
-                "classification",
-                "scope",
-                "owner",
-                "created",
-                "updated"
-              ],
-              "properties": {
-                "classification": {
-                  "$ref": "#/components/schemas/ArtifactClassification",
-                  "description": "Classification used to distinguish runtime log artifacts from general artifacts."
-                },
-                "content_type": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "description": "MIME content type"
-                },
-                "created": {
-                  "type": "string",
-                  "format": "date-time",
-                  "description": "Creation timestamp"
-                },
-                "id": {
-                  "type": "integer",
-                  "format": "int64",
-                  "description": "Artifact ID"
-                },
-                "name": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "description": "Human-readable name"
-                },
-                "owner": {
-                  "type": "string",
-                  "description": "Owner identifier"
-                },
-                "ref": {
-                  "type": "string",
-                  "description": "Artifact reference"
-                },
-                "scope": {
-                  "$ref": "#/components/schemas/OwnerType",
-                  "description": "Owner scope"
-                },
-                "size_bytes": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ],
-                  "format": "int64",
-                  "description": "Size of latest version in bytes"
-                },
-                "type": {
-                  "$ref": "#/components/schemas/ArtifactType",
-                  "description": "Artifact type"
-                },
-                "updated": {
-                  "type": "string",
-                  "format": "date-time",
-                  "description": "Last update timestamp"
-                },
-                "visibility": {
-                  "$ref": "#/components/schemas/ArtifactVisibility",
-                  "description": "Visibility level"
-                }
-              }
-            },
-            "description": "The page items"
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationMeta",
-            "description": "Pagination metadata"
-          }
-        }
-      },
-      "PaginatedResponse_ArtifactVersionSummary": {
-        "type": "object",
-        "description": "Paginated response wrapper",
-        "required": [
-          "items",
-          "pagination"
-        ],
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "description": "Simplified version for list endpoints",
-              "required": [
-                "id",
-                "version",
-                "created"
-              ],
-              "properties": {
-                "body_state": {
-                  "oneOf": [
-                    {
-                      "type": "null"
-                    },
-                    {
-                      "$ref": "#/components/schemas/ArtifactBodyState"
-                    }
-                  ]
-                },
-                "content_type": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "description": "MIME content type"
-                },
-                "created": {
-                  "type": "string",
-                  "format": "date-time",
-                  "description": "Creation timestamp"
-                },
-                "created_by": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "description": "Who created this version"
-                },
-                "execution": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ],
-                  "format": "int64",
-                  "description": "Execution that produced this version"
-                },
-                "file_path": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "description": "Relative file path for disk-backed versions"
-                },
-                "id": {
-                  "type": "integer",
-                  "format": "int64",
-                  "description": "Version ID"
-                },
-                "object_key": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "provider_version": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "sha256": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "size_bytes": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ],
-                  "format": "int64",
-                  "description": "Size of content in bytes"
-                },
-                "version": {
-                  "type": "integer",
-                  "format": "int32",
-                  "description": "Version number"
                 }
               }
             },
