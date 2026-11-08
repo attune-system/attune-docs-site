@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.10.2"
+    "version": "0.10.3"
   },
   "servers": [
     {
@@ -8796,8 +8796,14 @@
           "400": {
             "description": "Invalid request"
           },
+          "403": {
+            "description": "Caller cannot execute or cover the selected grants"
+          },
           "404": {
             "description": "Action not found"
+          },
+          "501": {
+            "description": "Execution sponsorship or protected output services are not ready"
           }
         },
         "security": [
@@ -9918,6 +9924,9 @@
           },
           "409": {
             "description": "Execution is not eligible for reschedule"
+          },
+          "501": {
+            "description": "Recorded execution scheduling requires coordinated runtime readiness"
           }
         },
         "security": [
@@ -19450,6 +19459,9 @@
           },
           "409": {
             "description": "Pending item conflict"
+          },
+          "501": {
+            "description": "Queue sponsorship or protected delegated output is not ready"
           }
         },
         "security": [
@@ -19518,6 +19530,9 @@
           },
           "409": {
             "description": "Queue is not accepting items or pending item conflict"
+          },
+          "501": {
+            "description": "Queue sponsorship or protected delegated output is not ready"
           }
         },
         "security": [
