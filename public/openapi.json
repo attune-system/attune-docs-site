@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.10.3"
+    "version": "0.10.4"
   },
   "servers": [
     {
@@ -153,6 +153,8 @@
                         "enabled",
                         "param_schema",
                         "out_schema",
+                        "output_policy",
+                        "output_format",
                         "is_adhoc",
                         "accesses_mcp",
                         "reference_visibility",
@@ -262,6 +264,13 @@
                             "null"
                           ],
                           "description": "Output schema"
+                        },
+                        "output_format": {
+                          "$ref": "#/components/schemas/OutputFormat"
+                        },
+                        "output_policy": {
+                          "$ref": "#/components/schemas/OutputPolicy",
+                          "description": "Authored output channel policy; defaults resolve under the stored schema."
                         },
                         "pack": {
                           "type": "integer",
@@ -670,6 +679,8 @@
                         "enabled",
                         "param_schema",
                         "out_schema",
+                        "output_policy",
+                        "output_format",
                         "is_adhoc",
                         "accesses_mcp",
                         "reference_visibility",
@@ -779,6 +790,13 @@
                             "null"
                           ],
                           "description": "Output schema"
+                        },
+                        "output_format": {
+                          "$ref": "#/components/schemas/OutputFormat"
+                        },
+                        "output_policy": {
+                          "$ref": "#/components/schemas/OutputPolicy",
+                          "description": "Authored output channel policy; defaults resolve under the stored schema."
                         },
                         "pack": {
                           "type": "integer",
@@ -969,6 +987,8 @@
                         "enabled",
                         "param_schema",
                         "out_schema",
+                        "output_policy",
+                        "output_format",
                         "is_adhoc",
                         "accesses_mcp",
                         "reference_visibility",
@@ -1078,6 +1098,13 @@
                             "null"
                           ],
                           "description": "Output schema"
+                        },
+                        "output_format": {
+                          "$ref": "#/components/schemas/OutputFormat"
+                        },
+                        "output_policy": {
+                          "$ref": "#/components/schemas/OutputPolicy",
+                          "description": "Authored output channel policy; defaults resolve under the stored schema."
                         },
                         "pack": {
                           "type": "integer",
@@ -3913,6 +3940,16 @@
           "404": {
             "description": "Artifact not found or no versions"
           },
+          "409": {
+            "description": "Authorized log is finalizing (LOG_FINALIZING) or incomplete (LOG_INCOMPLETE)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "416": {
             "description": "Requested range is not satisfiable"
           }
@@ -5297,6 +5334,16 @@
           },
           "404": {
             "description": "Artifact, version, or content not found"
+          },
+          "409": {
+            "description": "Authorized log is finalizing (LOG_FINALIZING) or incomplete (LOG_INCOMPLETE)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "416": {
             "description": "Requested range is not satisfiable"
@@ -9249,6 +9296,13 @@
                           "type": "object",
                           "description": "Execution result/output"
                         },
+                        "revealed_output_channels": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "description": "Explicitly requested original channel values, separate from public projections."
+                        },
                         "schema_binding": {
                           "oneOf": [
                             {
@@ -9505,6 +9559,13 @@
                         "result": {
                           "type": "object",
                           "description": "Execution result/output"
+                        },
+                        "revealed_output_channels": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "description": "Explicitly requested original channel values, separate from public projections."
                         },
                         "schema_binding": {
                           "oneOf": [
@@ -24743,6 +24804,8 @@
           "enabled",
           "param_schema",
           "out_schema",
+          "output_policy",
+          "output_format",
           "is_adhoc",
           "accesses_mcp",
           "reference_visibility",
@@ -24852,6 +24915,13 @@
               "null"
             ],
             "description": "Output schema"
+          },
+          "output_format": {
+            "$ref": "#/components/schemas/OutputFormat"
+          },
+          "output_policy": {
+            "$ref": "#/components/schemas/OutputPolicy",
+            "description": "Authored output channel policy; defaults resolve under the stored schema."
           },
           "pack": {
             "type": "integer",
@@ -25494,6 +25564,8 @@
               "enabled",
               "param_schema",
               "out_schema",
+              "output_policy",
+              "output_format",
               "is_adhoc",
               "accesses_mcp",
               "reference_visibility",
@@ -25603,6 +25675,13 @@
                   "null"
                 ],
                 "description": "Output schema"
+              },
+              "output_format": {
+                "$ref": "#/components/schemas/OutputFormat"
+              },
+              "output_policy": {
+                "$ref": "#/components/schemas/OutputPolicy",
+                "description": "Authored output channel policy; defaults resolve under the stored schema."
               },
               "pack": {
                 "type": "integer",
@@ -26923,6 +27002,13 @@
               "result": {
                 "type": "object",
                 "description": "Execution result/output"
+              },
+              "revealed_output_channels": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "Explicitly requested original channel values, separate from public projections."
               },
               "schema_binding": {
                 "oneOf": [
@@ -33341,6 +33427,14 @@
             ],
             "description": "Output schema (flat format) defining expected outputs with inline required/secret"
           },
+          "output_format": {
+            "$ref": "#/components/schemas/OutputFormat",
+            "description": "Parsing format for stdout."
+          },
+          "output_policy": {
+            "$ref": "#/components/schemas/OutputPolicy",
+            "description": "Output channel visibility choices, independent of secret inputs."
+          },
           "pack_ref": {
             "type": "string",
             "description": "Pack reference this action belongs to",
@@ -35047,6 +35141,10 @@
             "type": "object",
             "description": "Output schema (flat format) defining expected outputs with inline required/secret"
           },
+          "output_policy": {
+            "$ref": "#/components/schemas/OutputPolicy",
+            "description": "Companion action output channel classification."
+          },
           "pack_ref": {
             "type": "string",
             "description": "Pack reference this workflow belongs to",
@@ -36717,6 +36815,13 @@
           "result": {
             "type": "object",
             "description": "Execution result/output"
+          },
+          "revealed_output_channels": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Explicitly requested original channel values, separate from public projections."
           },
           "schema_binding": {
             "oneOf": [
@@ -38906,6 +39011,60 @@
           }
         ],
         "description": "Explicit patch operation for nullable string fields."
+      },
+      "OutputFormat": {
+        "type": "string",
+        "description": "Format for action output parsing",
+        "enum": [
+          "text",
+          "json",
+          "yaml",
+          "jsonl"
+        ]
+      },
+      "OutputPolicy": {
+        "type": "object",
+        "description": "Optional authoring choices. Resolve against the stored output contract once.",
+        "properties": {
+          "error": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/OutputVisibility"
+              }
+            ]
+          },
+          "stderr": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/OutputVisibility"
+              }
+            ]
+          },
+          "stdout": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/StdoutPolicy"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "OutputVisibility": {
+        "type": "string",
+        "enum": [
+          "public",
+          "secret"
+        ]
       },
       "OwnerType": {
         "type": "string",
@@ -45377,6 +45536,10 @@
             ],
             "description": "Output schema (flat format)"
           },
+          "output_policy": {
+            "$ref": "#/components/schemas/OutputPolicy",
+            "description": "Companion action output channel classification."
+          },
           "pack_ref": {
             "type": "string",
             "description": "Pack reference this workflow belongs to",
@@ -45967,6 +46130,14 @@
           "worker_health",
           "worker_status",
           "sensor_health"
+        ]
+      },
+      "StdoutPolicy": {
+        "type": "string",
+        "enum": [
+          "public",
+          "secret",
+          "sanitized"
         ]
       },
       "SuccessResponse": {
@@ -46923,6 +47094,28 @@
               "null"
             ],
             "description": "Output schema"
+          },
+          "output_format": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/OutputFormat",
+                "description": "Parsing format for stdout."
+              }
+            ]
+          },
+          "output_policy": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/OutputPolicy",
+                "description": "Replace output channel visibility choices; an empty object restores defaults."
+              }
+            ]
           },
           "param_schema": {
             "type": [
@@ -48329,6 +48522,17 @@
               "null"
             ],
             "description": "Output schema"
+          },
+          "output_policy": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/OutputPolicy",
+                "description": "Companion action output channel classification."
+              }
+            ]
           },
           "param_schema": {
             "type": [
