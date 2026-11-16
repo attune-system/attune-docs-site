@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.10.4"
+    "version": "0.11.0"
   },
   "servers": [
     {
@@ -9264,6 +9264,19 @@
                           "description": "Execution ID",
                           "example": 1
                         },
+                        "log_delivery": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "description": "Per-stream delivery availability; terminal execution status does not imply Ready logs.",
+                          "additionalProperties": {
+                            "$ref": "#/components/schemas/LogAvailability"
+                          },
+                          "propertyNames": {
+                            "type": "string"
+                          }
+                        },
                         "original_execution": {
                           "type": [
                             "integer",
@@ -9527,6 +9540,19 @@
                           "format": "int64",
                           "description": "Execution ID",
                           "example": 1
+                        },
+                        "log_delivery": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "description": "Per-stream delivery availability; terminal execution status does not imply Ready logs.",
+                          "additionalProperties": {
+                            "$ref": "#/components/schemas/LogAvailability"
+                          },
+                          "propertyNames": {
+                            "type": "string"
+                          }
                         },
                         "original_execution": {
                           "type": [
@@ -21794,7 +21820,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TriggerResponse"
+                  "$ref": "#/components/schemas/ApiResponse_WebhookManagementResponse"
                 }
               }
             }
@@ -21837,7 +21863,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TriggerResponse"
+                  "$ref": "#/components/schemas/ApiResponse_WebhookManagementResponse"
                 }
               }
             }
@@ -21880,7 +21906,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TriggerResponse"
+                  "$ref": "#/components/schemas/ApiResponse_WebhookManagementResponse"
                 }
               }
             }
@@ -21893,6 +21919,43 @@
           },
           "500": {
             "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      }
+    },
+    "/api/v1/triggers/{ref}/webhooks/reveal": {
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "summary": "Explicitly reveal the webhook bearer credential to an authorized manager.",
+        "operationId": "reveal_webhook_key",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "description": "Trigger reference",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_WebhookManagementResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -23374,6 +23437,37 @@
         ]
       }
     },
+    "/auth/exchange": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "login_exchange",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginExchangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Browser login exchanged",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid exchange"
+          }
+        }
+      }
+    },
     "/auth/internal/sensor-token": {
       "post": {
         "tags": [
@@ -24405,6 +24499,30 @@
           },
           "409": {
             "description": "User already exists"
+          }
+        }
+      }
+    },
+    "/auth/session/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Revoke a local/CLI session using its refresh credential, including a previously rotated token.",
+        "operationId": "logout_session",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Session revoked"
           }
         }
       }
@@ -26970,6 +27088,19 @@
                 "format": "int64",
                 "description": "Execution ID",
                 "example": 1
+              },
+              "log_delivery": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "Per-stream delivery availability; terminal execution status does not imply Ready logs.",
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/LogAvailability"
+                },
+                "propertyNames": {
+                  "type": "string"
+                }
               },
               "original_execution": {
                 "type": [
@@ -29558,14 +29689,6 @@
                 "type": "boolean",
                 "description": "Whether webhooks are enabled for this trigger",
                 "example": false
-              },
-              "webhook_key": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "description": "Webhook key (only present if webhooks are enabled)",
-                "example": "wh_k7j2n9p4m8q1r5w3x6z0a2b5c8d1e4f7g9h2"
               }
             }
           },
@@ -30110,6 +30233,41 @@
                 }
               }
             }
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional message"
+          }
+        }
+      },
+      "ApiResponse_WebhookManagementResponse": {
+        "type": "object",
+        "description": "Standard API response wrapper",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TriggerResponse"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "webhook_key": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            ],
+            "description": "Credential-bearing response, returned only by explicit management operations."
           },
           "message": {
             "type": [
@@ -33900,7 +34058,7 @@
               "object",
               "null"
             ],
-            "description": "Environment overrides for this execution. ATTUNE_ names are reserved for internal use.",
+            "description": "Caller environment values; names must be declared in the captured runtime execution_config.permitted_caller_env. Startup, search-path and ATTUNE_ controls are forbidden.",
             "additionalProperties": {
               "type": "string"
             },
@@ -36784,6 +36942,19 @@
             "description": "Execution ID",
             "example": 1
           },
+          "log_delivery": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Per-stream delivery availability; terminal execution status does not imply Ready logs.",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/LogAvailability"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
           "original_execution": {
             "type": [
               "integer",
@@ -38622,6 +38793,69 @@
           }
         }
       },
+      "LogAvailability": {
+        "type": "object",
+        "required": [
+          "state"
+        ],
+        "properties": {
+          "artifact_version": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/i64"
+              }
+            ]
+          },
+          "finalize_by": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "retry_after_ms": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": 0
+          },
+          "revision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "state": {
+            "$ref": "#/components/schemas/LogAvailabilityState"
+          },
+          "stream": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/i64"
+              }
+            ]
+          }
+        }
+      },
+      "LogAvailabilityState": {
+        "type": "string",
+        "enum": [
+          "empty",
+          "finalizing",
+          "ready",
+          "incomplete",
+          "unknown"
+        ]
+      },
       "LogRetentionLimitPatch": {
         "oneOf": [
           {
@@ -38694,6 +38928,17 @@
             }
           }
         ]
+      },
+      "LoginExchangeRequest": {
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          }
+        }
       },
       "LoginRequest": {
         "type": "object",
@@ -46848,14 +47093,6 @@
             "type": "boolean",
             "description": "Whether webhooks are enabled for this trigger",
             "example": false
-          },
-          "webhook_key": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Webhook key (only present if webhooks are enabled)",
-            "example": "wh_k7j2n9p4m8q1r5w3x6z0a2b5c8d1e4f7g9h2"
           }
         }
       },
@@ -47522,7 +47759,8 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/Value"
+                "$ref": "#/components/schemas/Value",
+                "description": "Authorization/provider attributes; requires identities:manage on the target."
               }
             ]
           },
@@ -47530,19 +47768,22 @@
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "description": "Profile field; requires identities:update on the target."
           },
           "frozen": {
             "type": [
               "boolean",
               "null"
-            ]
+            ],
+            "description": "Administrative freeze state; requires identities:manage on the target."
           },
           "password": {
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "description": "Password reset; requires identities:manage on the target."
           }
         }
       },
@@ -48650,6 +48891,25 @@
         }
       },
       "Value": {},
+      "WebhookManagementResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TriggerResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "webhook_key": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Credential-bearing response, returned only by explicit management operations."
+      },
       "WebhookReceiverRequest": {
         "type": "object",
         "description": "Request body for webhook receiver endpoint",
