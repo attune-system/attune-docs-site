@@ -20,6 +20,10 @@ Run the full local check before you publish a change:
 npm run verify
 ```
 
+Verification includes dependency auditing under the
+[time-limited audit policy](docs/dependency-audit.md), as well as tests, type
+checking, the static build, and generated-site checks.
+
 Astro writes the static site and Pagefind search index to `dist/`.
 
 ## Configure community links
