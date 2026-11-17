@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.11.0"
+    "version": "0.11.1"
   },
   "servers": [
     {
@@ -47760,7 +47760,7 @@
               },
               {
                 "$ref": "#/components/schemas/Value",
-                "description": "Authorization/provider attributes; requires identities:manage on the target."
+                "description": "Authorization/provider attributes; requires identities:manage on the target and permissions:manage."
               }
             ]
           },
@@ -47783,7 +47783,7 @@
               "string",
               "null"
             ],
-            "description": "Password reset; requires identities:manage on the target."
+            "description": "Password reset; requires identities:manage on the target and permissions:manage."
           }
         }
       },
