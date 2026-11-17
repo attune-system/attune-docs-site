@@ -11,13 +11,15 @@
     "import:openapi": "node scripts/import-openapi.mjs",
     "test:openapi": "node --test scripts/import-openapi.test.mjs",
     "test:mermaid": "node --test scripts/mermaid.test.mjs",
-    "verify": "npm run test:openapi && npm run test:mermaid && npm run check && npm run build && node scripts/check-built-links.mjs && node scripts/check-openapi-archive.mjs"
+    "test:audit": "node --test scripts/audit-dependencies.test.mjs",
+    "audit:ci": "node scripts/audit-dependencies.mjs",
+    "verify": "npm run test:audit && npm run audit:ci && npm run test:openapi && npm run test:mermaid && npm run check && npm run build && node scripts/check-built-links.mjs && node scripts/check-openapi-archive.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.12",
     "@astrojs/markdown-satteri": "^0.3.8",
     "@astrojs/starlight": "^0.41.11",
-    "astro": "^7.4.2",
+    "astro": "^7.4.12",
     "mermaid": "^12.2.0",
     "sharp": "^0.35.5",
     "typescript": "^5.9.3"
