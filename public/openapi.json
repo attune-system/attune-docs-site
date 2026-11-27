@@ -11,7 +11,7 @@
       "name": "Apache 2.0",
       "url": "https://opensource.org/license/apache-2.0"
     },
-    "version": "0.11.1"
+    "version": "0.11.2"
   },
   "servers": [
     {
@@ -149,7 +149,8 @@
                         "pack",
                         "pack_ref",
                         "label",
-                        "entrypoint",
+                        "parameter_delivery",
+                        "parameter_format",
                         "enabled",
                         "param_schema",
                         "out_schema",
@@ -167,6 +168,16 @@
                           "description": "Hint that this action may invoke the Attune MCP server and spawn child executions.",
                           "default": false,
                           "example": false
+                        },
+                        "argument_preview": {
+                          "type": [
+                            "array",
+                            "null"
+                          ],
+                          "items": {
+                            "$ref": "#/components/schemas/ArgumentPreview"
+                          },
+                          "description": "Definition-only ordering preview; never contains execution inputs."
                         },
                         "artifact_retention_limit": {
                           "type": [
@@ -218,7 +229,10 @@
                           "example": true
                         },
                         "entrypoint": {
-                          "type": "string",
+                          "type": [
+                            "string",
+                            "null"
+                          ],
                           "description": "Entry point",
                           "example": "/actions/slack/post_message.py"
                         },
@@ -237,6 +251,16 @@
                           "type": "string",
                           "description": "Human-readable label",
                           "example": "Post Message to Slack"
+                        },
+                        "launch": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/LaunchSpec"
+                            }
+                          ]
                         },
                         "log_retention_limit": {
                           "type": [
@@ -289,6 +313,12 @@
                             "null"
                           ],
                           "description": "Parameter schema (StackStorm-style with inline required/secret)"
+                        },
+                        "parameter_delivery": {
+                          "$ref": "#/components/schemas/ParameterDelivery"
+                        },
+                        "parameter_format": {
+                          "$ref": "#/components/schemas/ParameterFormat"
                         },
                         "ref": {
                           "type": "string",
@@ -675,7 +705,8 @@
                         "pack",
                         "pack_ref",
                         "label",
-                        "entrypoint",
+                        "parameter_delivery",
+                        "parameter_format",
                         "enabled",
                         "param_schema",
                         "out_schema",
@@ -693,6 +724,16 @@
                           "description": "Hint that this action may invoke the Attune MCP server and spawn child executions.",
                           "default": false,
                           "example": false
+                        },
+                        "argument_preview": {
+                          "type": [
+                            "array",
+                            "null"
+                          ],
+                          "items": {
+                            "$ref": "#/components/schemas/ArgumentPreview"
+                          },
+                          "description": "Definition-only ordering preview; never contains execution inputs."
                         },
                         "artifact_retention_limit": {
                           "type": [
@@ -744,7 +785,10 @@
                           "example": true
                         },
                         "entrypoint": {
-                          "type": "string",
+                          "type": [
+                            "string",
+                            "null"
+                          ],
                           "description": "Entry point",
                           "example": "/actions/slack/post_message.py"
                         },
@@ -763,6 +807,16 @@
                           "type": "string",
                           "description": "Human-readable label",
                           "example": "Post Message to Slack"
+                        },
+                        "launch": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/LaunchSpec"
+                            }
+                          ]
                         },
                         "log_retention_limit": {
                           "type": [
@@ -815,6 +869,12 @@
                             "null"
                           ],
                           "description": "Parameter schema (StackStorm-style with inline required/secret)"
+                        },
+                        "parameter_delivery": {
+                          "$ref": "#/components/schemas/ParameterDelivery"
+                        },
+                        "parameter_format": {
+                          "$ref": "#/components/schemas/ParameterFormat"
                         },
                         "ref": {
                           "type": "string",
@@ -983,7 +1043,8 @@
                         "pack",
                         "pack_ref",
                         "label",
-                        "entrypoint",
+                        "parameter_delivery",
+                        "parameter_format",
                         "enabled",
                         "param_schema",
                         "out_schema",
@@ -1001,6 +1062,16 @@
                           "description": "Hint that this action may invoke the Attune MCP server and spawn child executions.",
                           "default": false,
                           "example": false
+                        },
+                        "argument_preview": {
+                          "type": [
+                            "array",
+                            "null"
+                          ],
+                          "items": {
+                            "$ref": "#/components/schemas/ArgumentPreview"
+                          },
+                          "description": "Definition-only ordering preview; never contains execution inputs."
                         },
                         "artifact_retention_limit": {
                           "type": [
@@ -1052,7 +1123,10 @@
                           "example": true
                         },
                         "entrypoint": {
-                          "type": "string",
+                          "type": [
+                            "string",
+                            "null"
+                          ],
                           "description": "Entry point",
                           "example": "/actions/slack/post_message.py"
                         },
@@ -1071,6 +1145,16 @@
                           "type": "string",
                           "description": "Human-readable label",
                           "example": "Post Message to Slack"
+                        },
+                        "launch": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/LaunchSpec"
+                            }
+                          ]
                         },
                         "log_retention_limit": {
                           "type": [
@@ -1123,6 +1207,12 @@
                             "null"
                           ],
                           "description": "Parameter schema (StackStorm-style with inline required/secret)"
+                        },
+                        "parameter_delivery": {
+                          "$ref": "#/components/schemas/ParameterDelivery"
+                        },
+                        "parameter_format": {
+                          "$ref": "#/components/schemas/ParameterFormat"
                         },
                         "ref": {
                           "type": "string",
@@ -24549,8 +24639,9 @@
                   "properties": {
                     "data": {
                       "type": "object",
-                      "description": "Public authentication settings for the login page.",
+                      "description": "Public authentication and branding settings for the installation.",
                       "required": [
+                        "branding",
                         "authentication_enabled",
                         "local_password_enabled",
                         "local_password_visible_by_default",
@@ -24565,6 +24656,10 @@
                           "type": "boolean",
                           "description": "Whether authentication is enabled for the server.",
                           "example": true
+                        },
+                        "branding": {
+                          "$ref": "#/components/schemas/BrandingConfig",
+                          "description": "Installation branding for the web UI."
                         },
                         "ldap_enabled": {
                           "type": "boolean",
@@ -24609,6 +24704,13 @@
                           "type": "boolean",
                           "description": "Whether local username/password login should be shown by default.",
                           "example": true
+                        },
+                        "login_disclosure": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "Plain-text disclosure to show before login, when configured."
                         },
                         "oidc_enabled": {
                           "type": "boolean",
@@ -24918,7 +25020,8 @@
           "pack",
           "pack_ref",
           "label",
-          "entrypoint",
+          "parameter_delivery",
+          "parameter_format",
           "enabled",
           "param_schema",
           "out_schema",
@@ -24936,6 +25039,16 @@
             "description": "Hint that this action may invoke the Attune MCP server and spawn child executions.",
             "default": false,
             "example": false
+          },
+          "argument_preview": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ArgumentPreview"
+            },
+            "description": "Definition-only ordering preview; never contains execution inputs."
           },
           "artifact_retention_limit": {
             "type": [
@@ -24987,7 +25100,10 @@
             "example": true
           },
           "entrypoint": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Entry point",
             "example": "/actions/slack/post_message.py"
           },
@@ -25006,6 +25122,16 @@
             "type": "string",
             "description": "Human-readable label",
             "example": "Post Message to Slack"
+          },
+          "launch": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LaunchSpec"
+              }
+            ]
           },
           "log_retention_limit": {
             "type": [
@@ -25058,6 +25184,12 @@
               "null"
             ],
             "description": "Parameter schema (StackStorm-style with inline required/secret)"
+          },
+          "parameter_delivery": {
+            "$ref": "#/components/schemas/ParameterDelivery"
+          },
+          "parameter_format": {
+            "$ref": "#/components/schemas/ParameterFormat"
           },
           "ref": {
             "type": "string",
@@ -25223,7 +25355,8 @@
           "ref",
           "pack_ref",
           "label",
-          "entrypoint",
+          "parameter_delivery",
+          "parameter_format",
           "enabled",
           "accesses_mcp",
           "reference_visibility",
@@ -25287,7 +25420,10 @@
             "example": true
           },
           "entrypoint": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Entry point",
             "example": "/actions/slack/post_message.py"
           },
@@ -25301,6 +25437,16 @@
             "type": "string",
             "description": "Human-readable label",
             "example": "Post Message to Slack"
+          },
+          "launch": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LaunchSpec"
+              }
+            ]
           },
           "log_retention_limit": {
             "type": [
@@ -25326,6 +25472,12 @@
             "type": "string",
             "description": "Pack reference",
             "example": "slack"
+          },
+          "parameter_delivery": {
+            "$ref": "#/components/schemas/ParameterDelivery"
+          },
+          "parameter_format": {
+            "$ref": "#/components/schemas/ParameterFormat"
           },
           "ref": {
             "type": "string",
@@ -25678,7 +25830,8 @@
               "pack",
               "pack_ref",
               "label",
-              "entrypoint",
+              "parameter_delivery",
+              "parameter_format",
               "enabled",
               "param_schema",
               "out_schema",
@@ -25696,6 +25849,16 @@
                 "description": "Hint that this action may invoke the Attune MCP server and spawn child executions.",
                 "default": false,
                 "example": false
+              },
+              "argument_preview": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "$ref": "#/components/schemas/ArgumentPreview"
+                },
+                "description": "Definition-only ordering preview; never contains execution inputs."
               },
               "artifact_retention_limit": {
                 "type": [
@@ -25747,7 +25910,10 @@
                 "example": true
               },
               "entrypoint": {
-                "type": "string",
+                "type": [
+                  "string",
+                  "null"
+                ],
                 "description": "Entry point",
                 "example": "/actions/slack/post_message.py"
               },
@@ -25766,6 +25932,16 @@
                 "type": "string",
                 "description": "Human-readable label",
                 "example": "Post Message to Slack"
+              },
+              "launch": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/LaunchSpec"
+                  }
+                ]
               },
               "log_retention_limit": {
                 "type": [
@@ -25818,6 +25994,12 @@
                   "null"
                 ],
                 "description": "Parameter schema (StackStorm-style with inline required/secret)"
+              },
+              "parameter_delivery": {
+                "$ref": "#/components/schemas/ParameterDelivery"
+              },
+              "parameter_format": {
+                "$ref": "#/components/schemas/ParameterFormat"
               },
               "ref": {
                 "type": "string",
@@ -26166,8 +26348,9 @@
         "properties": {
           "data": {
             "type": "object",
-            "description": "Public authentication settings for the login page.",
+            "description": "Public authentication and branding settings for the installation.",
             "required": [
+              "branding",
               "authentication_enabled",
               "local_password_enabled",
               "local_password_visible_by_default",
@@ -26182,6 +26365,10 @@
                 "type": "boolean",
                 "description": "Whether authentication is enabled for the server.",
                 "example": true
+              },
+              "branding": {
+                "$ref": "#/components/schemas/BrandingConfig",
+                "description": "Installation branding for the web UI."
               },
               "ldap_enabled": {
                 "type": "boolean",
@@ -26226,6 +26413,13 @@
                 "type": "boolean",
                 "description": "Whether local username/password login should be shown by default.",
                 "example": true
+              },
+              "login_disclosure": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Plain-text disclosure to show before login, when configured."
               },
               "oidc_enabled": {
                 "type": "boolean",
@@ -31040,6 +31234,41 @@
           }
         ]
       },
+      "ArgumentPreview": {
+        "type": "object",
+        "description": "Definition-only preview. Contains no execution input or resolved secret value.",
+        "required": [
+          "order"
+        ],
+        "properties": {
+          "cli": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CliBinding"
+              }
+            ]
+          },
+          "literal": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "order": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "parameter": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
       "ArtifactBodyState": {
         "type": "string",
         "enum": [
@@ -32008,6 +32237,40 @@
           "sensors",
           "dashboards"
         ]
+      },
+      "BrandingConfig": {
+        "type": "object",
+        "description": "Public image URLs for installation branding in the web UI.",
+        "properties": {
+          "favicon_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Browser tab icon."
+          },
+          "icon_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Compact logo for the collapsed sidebar."
+          },
+          "logo_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Logo for the sign-in page and expanded sidebar."
+          },
+          "workflow_watermark_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Tiled watermark for the workflow builder canvas."
+          }
+        }
       },
       "BuildInfo": {
         "type": "object",
@@ -33338,6 +33601,129 @@
           "directory_content"
         ]
       },
+      "ClasspathEntry": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "artifact"
+            ],
+            "properties": {
+              "artifact": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "CliBinding": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "order",
+              "kind"
+            ],
+            "properties": {
+              "encoding": {
+                "$ref": "#/components/schemas/Encoding"
+              },
+              "expand": {
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "positional"
+                ]
+              },
+              "order": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "order",
+              "name",
+              "kind"
+            ],
+            "properties": {
+              "encoding": {
+                "$ref": "#/components/schemas/Encoding"
+              },
+              "expand": {
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "option"
+                ]
+              },
+              "missing": {
+                "$ref": "#/components/schemas/MissingPolicy"
+              },
+              "name": {
+                "type": "string"
+              },
+              "order": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "style": {
+                "$ref": "#/components/schemas/OptionStyle"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "order",
+              "name",
+              "kind"
+            ],
+            "properties": {
+              "false_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "flag"
+                ]
+              },
+              "missing": {
+                "$ref": "#/components/schemas/MissingPolicy"
+              },
+              "name": {
+                "type": "string"
+              },
+              "order": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          }
+        ],
+        "description": "Action-input annotation; values and their paths are never duplicated here."
+      },
       "CloneDashboardRequest": {
         "type": "object",
         "required": [
@@ -33487,8 +33873,7 @@
         "required": [
           "ref",
           "pack_ref",
-          "label",
-          "entrypoint"
+          "label"
         ],
         "properties": {
           "accesses_mcp": {
@@ -33549,7 +33934,10 @@
             "example": true
           },
           "entrypoint": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Entry point for action execution (e.g., path to script, function name)",
             "example": "/actions/slack/post_message.py"
           },
@@ -33557,6 +33945,17 @@
             "type": "string",
             "description": "Human-readable label",
             "example": "Post Message to Slack"
+          },
+          "launch": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LaunchSpec",
+                "description": "Typed source; exclusive with entrypoint."
+              }
+            ]
           },
           "log_retention_limit": {
             "type": [
@@ -33604,6 +34003,26 @@
               "null"
             ],
             "description": "Parameter schema (StackStorm-style) defining expected inputs with inline required/secret"
+          },
+          "parameter_delivery": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ParameterDelivery"
+              }
+            ]
+          },
+          "parameter_format": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ParameterFormat"
+              }
+            ]
           },
           "ref": {
             "type": "string",
@@ -36281,6 +36700,13 @@
           }
         }
       },
+      "Encoding": {
+        "type": "string",
+        "enum": [
+          "scalar",
+          "json"
+        ]
+      },
       "EnforcementCondition": {
         "type": "string",
         "enum": [
@@ -38420,6 +38846,12 @@
           }
         }
       },
+      "IntrinsicHandler": {
+        "type": "string",
+        "enum": [
+          "attune.inquiry/v1"
+        ]
+      },
       "InvocationBinding": {
         "oneOf": [
           {
@@ -38775,6 +39207,149 @@
           "does_not_exist"
         ]
       },
+      "LaunchSpec": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "program",
+              "type"
+            ],
+            "properties": {
+              "arguments": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/LiteralArgument"
+                }
+              },
+              "program": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "command"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "path",
+              "type"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "file"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "artifact",
+              "type"
+            ],
+            "properties": {
+              "arguments": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/LiteralArgument"
+                }
+              },
+              "artifact": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "native"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "artifact",
+              "type"
+            ],
+            "properties": {
+              "artifact": {
+                "type": "string"
+              },
+              "jvm_args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "java_jar"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "main_class",
+              "classpath",
+              "type"
+            ],
+            "properties": {
+              "classpath": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ClasspathEntry"
+                }
+              },
+              "jvm_args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "main_class": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "java_class"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "handler",
+              "type"
+            ],
+            "properties": {
+              "handler": {
+                "$ref": "#/components/schemas/IntrinsicHandler"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "intrinsic"
+                ]
+              }
+            }
+          }
+        ]
+      },
       "LdapLoginRequest": {
         "type": "object",
         "description": "Request body for LDAP login.",
@@ -38792,6 +39367,24 @@
             "description": "User password"
           }
         }
+      },
+      "LiteralArgument": {
+        "type": "object",
+        "description": "One immutable token, ordered together with the parameter bindings.",
+        "required": [
+          "literal",
+          "order"
+        ],
+        "properties": {
+          "literal": {
+            "type": "string"
+          },
+          "order": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
       },
       "LogAvailability": {
         "type": "object",
@@ -39014,6 +39607,13 @@
           "platform",
           "pack",
           "ad_hoc"
+        ]
+      },
+      "MissingPolicy": {
+        "type": "string",
+        "enum": [
+          "omit",
+          "error"
         ]
       },
       "NativeMaintenanceConfig": {
@@ -39256,6 +39856,14 @@
           }
         ],
         "description": "Explicit patch operation for nullable string fields."
+      },
+      "OptionStyle": {
+        "type": "string",
+        "enum": [
+          "separate",
+          "equals",
+          "attached"
+        ]
       },
       "OutputFormat": {
         "type": "string",
@@ -40659,7 +41267,8 @@
                 "ref",
                 "pack_ref",
                 "label",
-                "entrypoint",
+                "parameter_delivery",
+                "parameter_format",
                 "enabled",
                 "accesses_mcp",
                 "reference_visibility",
@@ -40723,7 +41332,10 @@
                   "example": true
                 },
                 "entrypoint": {
-                  "type": "string",
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "description": "Entry point",
                   "example": "/actions/slack/post_message.py"
                 },
@@ -40737,6 +41349,16 @@
                   "type": "string",
                   "description": "Human-readable label",
                   "example": "Post Message to Slack"
+                },
+                "launch": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LaunchSpec"
+                    }
+                  ]
                 },
                 "log_retention_limit": {
                   "type": [
@@ -40762,6 +41384,12 @@
                   "type": "string",
                   "description": "Pack reference",
                   "example": "slack"
+                },
+                "parameter_delivery": {
+                  "$ref": "#/components/schemas/ParameterDelivery"
+                },
+                "parameter_format": {
+                  "$ref": "#/components/schemas/ParameterFormat"
                 },
                 "ref": {
                   "type": "string",
@@ -43335,6 +43963,24 @@
             "minimum": 0
           }
         }
+      },
+      "ParameterDelivery": {
+        "type": "string",
+        "description": "How parameters should be delivered to an action",
+        "enum": [
+          "none",
+          "stdin",
+          "file"
+        ]
+      },
+      "ParameterFormat": {
+        "type": "string",
+        "description": "Format for parameter serialization",
+        "enum": [
+          "dotenv",
+          "json",
+          "yaml"
+        ]
       },
       "PartitionStatus": {
         "type": "object",
@@ -47303,6 +47949,17 @@
             "description": "Human-readable label",
             "example": "Post Message to Slack (Updated)"
           },
+          "launch": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LaunchSpec",
+                "description": "Omission preserves, null clears, an object replaces the complete source."
+              }
+            ]
+          },
           "log_retention_limit": {
             "oneOf": [
               {
@@ -47360,6 +48017,26 @@
               "null"
             ],
             "description": "Parameter schema (StackStorm-style with inline required/secret)"
+          },
+          "parameter_delivery": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ParameterDelivery"
+              }
+            ]
+          },
+          "parameter_format": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ParameterFormat"
+              }
+            ]
           },
           "reference_allowed_pack_refs": {
             "type": [
